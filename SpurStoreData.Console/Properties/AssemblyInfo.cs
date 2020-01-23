@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SpurStoreData.Console")]
+[assembly: AssemblyTitle("SpurStoreData.CommandLine")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Staffordshire University")]
-[assembly: AssemblyProduct("SpurStoreData.Console")]
+[assembly: AssemblyProduct("SpurStoreData.CommandLine")]
 [assembly: AssemblyCopyright("Copyright © Staffordshire University 2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
