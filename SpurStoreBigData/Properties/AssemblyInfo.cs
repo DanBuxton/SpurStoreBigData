@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SpurStoreBigData.CommandLine")]
+[assembly: AssemblyTitle("SpurStoreBigData")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("SpurStoreBigData.CommandLine")]
-[assembly: AssemblyCopyright("")]
+[assembly: AssemblyCompany("HP Inc.")]
+[assembly: AssemblyProduct("SpurStoreBigData")]
+[assembly: AssemblyCopyright("Copyright © HP Inc. 2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("f7118fae-8583-4fd9-9aa9-ae7bcbd47b04")]
+[assembly: Guid("a4a9c4a8-ac03-4170-9844-819826b52080")]
 
 // Version information for an assembly consists of the following four values:
 //

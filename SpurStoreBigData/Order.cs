@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SpurStoreBigData.CommandLine
+namespace SpurStoreBigData
 {
-    class Order
+    public class Order
     {
         public Store Store { get; set; }
 
@@ -14,5 +14,14 @@ namespace SpurStoreBigData.CommandLine
         public string SupplierName { get; set; }
         public string SupplierType { get; set; }
         public double Cost { get; set; }
+
+        public Order(Store store, Date date, string supplierName, string supplierType, double cost)
+        {
+            Store = store;
+            Date = date;
+            SupplierName = supplierName;
+            SupplierType = supplierType;
+            Cost = cost;
+        }
     }
 }

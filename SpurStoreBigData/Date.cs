@@ -4,11 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SpurStoreBigData.CommandLine
+namespace SpurStoreBigData
 {
-    class Date
+    public class Date
     {
         public int Week { get; set; }
         public int Year { get; set; }
+
+        public Date(int week, int year)
+        {
+            Week = week;
+            Year = year;
+        }
     }
 }

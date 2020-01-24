@@ -7,116 +7,163 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using static SpurStoreBigData.Core;
+
 namespace SpurStoreBigData.CommandLine
 {
     class Program
     {
-        private static string FolderPath = "Data";
-        private static readonly string StoreCodesFile = "StoreCodes.csv";
-        private static readonly string StoreDataFolder = "StoreData";
+        private static Dictionary<int, string> Items { get; set; } = new Dictionary<int, string>();
 
         static void Main(string[] args)
         {
-            Console.Title = "Spur Ltd Big Data";
+            SetupConsole();
 
-
-
-            LoadData();
+            Menu();
         }
 
-        private static void LoadData()
+        private static void ChangeDataFolder()
         {
-            string storeCodesFilePath = Directory.GetCurrentDirectory() + @"\" + FolderPath + @"\" + StoreCodesFile;
-            //FolderPath = @"F:\BSc Software Engineering\Year 2\Task-based Software Engineering\Data\";
-            //storeCodesFilePath = FolderPath + @"\" + StoreCodesFile;
+            // F:\BSc Software Engineering\Year 2\Task-based Software Engineering\Data
+            Console.Write("Data Folder path > ");
+            string path = Console.ReadLine();
 
-            Dictionary<string, Store> stores = new Dictionary<string, Store>();
-            HashSet<Date> dates = new HashSet<Date>();
-            List<Order> orders = new List<Order>();
-
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-
-            string[] storeCodesData = File.ReadAllLines(storeCodesFilePath);
-            foreach (var storeData in storeCodesData)
+            while (path == "")
             {
-                string[] storeDataSplit = storeData.Split(',');
-                Store store = new Store { StoreCode = storeDataSplit[0], StoreLocation = storeDataSplit[1] };
-                if (!stores.ContainsKey(store.StoreCode))
-                    stores.Add(store.StoreCode, store);
-
-                //storeDataSplit[0] = store code
-                //storeDataSplit[1] = store location
+                Console.Write("Data Folder path > ");
+                path = Console.ReadLine();
             }
 
-            string[] fileNames = Directory.GetFiles(FolderPath + @"\" + StoreDataFolder);
+            FolderPath = path;
+        }
 
-            Parallel.ForEach(fileNames, filePath =>
+        private static void Menu()
+        {
+            ChangeDataFolder();
+
+            while (true)
             {
-                string fileNameExt = Path.GetFileName(filePath);
-                string fileName = Path.GetFileNameWithoutExtension(filePath);
+                Console.Clear();
 
-                string[] fileNameSplit = fileName.Split('_');
-                Store store = stores[fileNameSplit[0]];
-                Date date = new Date { Week = Convert.ToInt32(fileNameSplit[1]), Year = Convert.ToInt32(fileNameSplit[2]) };
-                dates.Add(date);
-                //fileNameSplit[0] = store code
-                //fileNameSplit[1] = week number
-                //fileNameSplit[2] = year
+                OutputMenuItems();
 
-                string[] orderData = File.ReadAllLines(FolderPath + @"\" + StoreDataFolder + @"\" + fileNameExt);
-                foreach (var orderInfo in orderData)
+                switch (MenuResponse())
                 {
-                    string[] orderSplit = orderInfo.Split(',');
-                    Order order = new Order
-                    {
-                        Store = store,
-                        Date = date,
-                        SupplierName = orderSplit[0],
-                        SupplierType = orderSplit[1],
-                        Cost = Convert.ToDouble(orderSplit[2])
-                    };
-                    orders.Add(order);
-                    //orderSplit[0] = supplier name
-                    //orderSplit[1] = supplier type
-                    //orderSplit[2] = cost
+                    case 1:
+                        try
+                        {
+                            ReloadData();
+
+                            foreach (var store in Stores.OrderBy(s => s.Key))
+                            {
+                                Console.WriteLine(store.Value);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
+                        break;
+                    case 2:
+                        break;
+                    case 3:
+                        break;
+                    case 4:
+                        break;
+                    case 5:
+                        break;
+                    case 6:
+                        break;
+                    case 7:
+                        break;
+                    case 8:
+                        break;
+                    case 9:
+                        break;
+                    case 10:
+                        break;
+                    case 11:
+                        break;
+                    case 12:
+                        break;
+                    case 13:
+                        ChangeDataFolder();
+                        break;
+                    case 14:
+                        break;
+                    case 15:
+                        Environment.Exit(0);
+                        break;
+                    default:
+                        break;
                 }
-            });
 
-            //foreach (var filePath in fileNames)
-            //{
-            //    string fileNameExt = Path.GetFileName(filePath);
-            //    string fileName = Path.GetFileNameWithoutExtension(filePath);
+                Console.Write("Press any key to continue");
+                Console.ReadKey();
+            }
+        }
 
-            //    string[] fileNameSplit = fileName.Split('_');
-            //    Store store = stores[fileNameSplit[0]];
-            //    Date date = new Date { Week = Convert.ToInt32(fileNameSplit[1]), Year = Convert.ToInt32(fileNameSplit[2]) };
-            //    dates.Add(date);
-            //    //fileNameSplit[0] = store code
-            //    //fileNameSplit[1] = week number
-            //    //fileNameSplit[2] = year
+        private static int MenuResponse()
+        {
+            int result = -1;
 
-            //    string[] orderData = File.ReadAllLines(FolderPath + @"\" + StoreDataFolder + @"\" + fileNameExt);
-            //    foreach (var orderInfo in orderData)
-            //    {
-            //        string[] orderSplit = orderInfo.Split(',');
-            //        Order order = new Order
-            //        {
-            //            Store = store,
-            //            Date = date,
-            //            SupplierName = orderSplit[0],
-            //            SupplierType = orderSplit[1],
-            //            Cost = Convert.ToDouble(orderSplit[2])
-            //        };
-            //        orders.Add(order);
-            //        //orderSplit[0] = supplier name
-            //        //orderSplit[1] = supplier type
-            //        //orderSplit[2] = cost
-            //    }
-            //}
+            while (result < 1)
+            {
+                try
+                {
+                    Console.Write("> ");
+                    result = Convert.ToInt32(Console.ReadLine());
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("Too big or small");
 
-            stopWatch.Stop();
-            Console.WriteLine("TimeToLoad: " + stopWatch.Elapsed.TotalSeconds);
+                    result = -1;
+                }
+            }
+
+            return result;
+        }
+
+        private static void OutputMenuItems()
+        {
+            foreach (var item in Items)
+            {
+                if (item.Value == null)
+                {
+                    Console.WriteLine();
+                    continue;
+                }
+                Console.WriteLine("{0, -2:d} - {1:s}", item.Key, item.Value);
+            }
+        }
+
+        private static void SetupConsole()
+        {
+            Console.Title = "Spur Ltd Big Data";
+
+            Items.Add(1, "List all stores");
+            Items.Add(Items.Keys.Last() + 1, "List all suppliers");
+            Items.Add(Items.Keys.Last() + 1, "List all supplier types\n");
+
+            Items.Add(Items.Keys.Last() + 1, "Total cost of all orders");
+            Items.Add(Items.Keys.Last() + 1, "Total cost of all orders for a store");
+            Items.Add(Items.Keys.Last() + 1, "Total cost of all orders in a week");
+            Items.Add(Items.Keys.Last() + 1, "Total cost of all orders in a week for a store");
+            Items.Add(Items.Keys.Last() + 1, "Total cost of all orders to a supplier");
+            Items.Add(Items.Keys.Last() + 1, "Cost of all orders from a supplier type");
+            Items.Add(Items.Keys.Last() + 1, "Cost of all orders in a week from a supplier type");
+            Items.Add(Items.Keys.Last() + 1, "Cost of all orders for a supplier type for a store");
+            Items.Add(Items.Keys.Last() + 1, "Cost of all orders in a week for a supplier type for a store\n");
+
+            // Graphs
+            //Items.Add(Items.Keys.Last() + 1, "Cost of all orders in a week from a supplier type");
+            //Items.Add(Items.Keys.Last() + 1, "Cost of all orders for a supplier type for a store");
+            //Items.Add(Items.Keys.Last() + 1, "Cost of all orders in a week for a supplier type for a store\n");
+
+            Items.Add(Items.Keys.Last() + 1, "Change data path");
+            Items.Add(Items.Keys.Last() + 1, "Reload all data\n");
+            Items.Add(Items.Keys.Last() + 1, "Exit");
         }
     }
 }

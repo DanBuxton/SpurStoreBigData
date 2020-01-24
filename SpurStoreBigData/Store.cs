@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SpurStoreBigData.CommandLine
+namespace SpurStoreBigData
 {
-    class Store
+    public class Store
     {
         public string StoreCode { get; set; }
         public string StoreLocation { get; set; }
@@ -16,9 +16,10 @@ namespace SpurStoreBigData.CommandLine
             StoreCode = code;
             StoreLocation = location;
         }
-        public Store()
-        {
 
+        public override string ToString()
+        {
+            return string.Format("Code: {0}; Location: {1};", StoreCode, StoreLocation);
         }
     }
 }
