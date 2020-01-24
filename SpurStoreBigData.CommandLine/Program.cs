@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SpurStoreData.CommandLine
+namespace SpurStoreBigData.CommandLine
 {
     class Program
     {
@@ -18,6 +18,8 @@ namespace SpurStoreData.CommandLine
         static void Main(string[] args)
         {
             Console.Title = "Spur Ltd Big Data";
+
+
 
             LoadData();
         }
