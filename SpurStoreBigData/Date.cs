@@ -16,5 +16,10 @@ namespace SpurStoreBigData
             Week = week;
             Year = year;
         }
+
+        public override string ToString()
+        {
+            return string.Format("{0, 2}/{1, -2}", Week, Year);
+        }
     }
 }

@@ -19,7 +19,7 @@ namespace SpurStoreBigData
 
         public override string ToString()
         {
-            return string.Format("Code: {0}; Location: {1};", StoreCode, StoreLocation);
+            return string.Format("{0, -4:s}  {1:s}", StoreCode, StoreLocation);
         }
     }
 }

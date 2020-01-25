@@ -23,5 +23,10 @@ namespace SpurStoreBigData
             SupplierType = supplierType;
             Cost = cost;
         }
+
+        public override string ToString()
+        {
+            return string.Format("{0} {1} {2:s} {3, 10:s} {4:C} cost", Store, Date, SupplierName, SupplierType, Cost);
+        }
     }
 }

@@ -9,13 +9,19 @@ using System.Threading.Tasks;
 
 namespace SpurStoreBigData
 {
-    public static class Core
+    public class Core
     {
-        public static ConcurrentDictionary<string, Store> Stores { get; private set; } = new ConcurrentDictionary<string, Store>();
-        public static ConcurrentStack<Date> Dates { get; private set; } = new ConcurrentStack<Date>();
-        public static ConcurrentBag<Order> Orders { get; private set; } = new ConcurrentBag<Order>();
+        private static ConcurrentDictionary<string, Store> Stores { get; set; } = new ConcurrentDictionary<string, Store>();
+        private static ConcurrentStack<Date> Dates { get; set; } = new ConcurrentStack<Date>();
+        private static ConcurrentBag<Order> Orders { get; set; } = new ConcurrentBag<Order>();
 
-        public static string FolderPath { get; set; } = "Data";
+        public static bool LoadCompleted { get; private set; } = false;
+
+        public static int StoresCount { get { return Stores.Count; } }
+        public static int DatesCount { get { return Dates.Count; } }
+        public static int OrdersCount { get { return Orders.Count; } }
+
+        public static string FolderPath { get; set; }
         public static string StoreCodesFile { get; } = "StoreCodes.csv";
         public static string StoreDataFolder { get; } = "StoreData";
 
@@ -23,84 +29,40 @@ namespace SpurStoreBigData
         {
             try
             {
-                return Stores.Values.ToArray();
+                return Stores.Values.OrderBy(s => s.StoreCode).ToArray();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return new Store[] { };
-            }
-        }
-
-        public static string[] GetTotalCostOfAllOrders()
-        {
-            try
-            {
-                List<string> result = null;
-
-                return result.ToArray();
-            }
-            catch (Exception)
-            {
-                return new string[] { };
+                throw new Exception("", e.InnerException);
             }
         }
 
-        public static void ReloadData() => LoadData();
-
-        public static void LoadData()
+        /// <summary>
+        /// Get the total cost of all orders from the available data. 
+        /// </summary>
+        /// <returns>Cost of all orders or <code>NaN</code> if an issue arises. </returns>
+        public static double GetTotalCostOfAllOrders()
         {
             try
             {
-                string storeCodesFilePath = FolderPath + @"\" + StoreCodesFile;
+                double result = 0.0;
 
-                Stopwatch stopWatch = new Stopwatch();
-                stopWatch.Start();
+                foreach (var o in Orders) result += o.Cost;
 
-                string[] storeCodesData = File.ReadAllLines(storeCodesFilePath);
-                Parallel.ForEach(storeCodesData, storeData =>
-                {
-                    string[] storeDataSplit = storeData.Split(',');
-                    Store store = new Store(storeDataSplit[0], storeDataSplit[1]);
-                    if (!Stores.ContainsKey(store.StoreCode))
-                        Stores.TryAdd(store.StoreCode, store);
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Unable to complete that task", e);
+            }
+        }
 
-                    //storeDataSplit[0] = store code
-                    //storeDataSplit[1] = store location
-                });
-                //foreach (var storeData in storeCodesData)
-                //{
-                //    string[] storeDataSplit = storeData.Split(',');
-                //    Store store = new Store(storeDataSplit[0], storeDataSplit[1]);
-                //    if (!Stores.ContainsKey(store.StoreCode))
-                //        Stores.TryAdd(store.StoreCode, store);
-
-                //    //storeDataSplit[0] = store code
-                //    //storeDataSplit[1] = store location
-                //}
-
-                string[] fileNames = Directory.GetFiles(FolderPath + @"\" + StoreDataFolder);
-
-                Parallel.ForEach(fileNames, filePath =>
-                {
-                    string fileNameExt = Path.GetFileName(filePath);
-                    string fileName = Path.GetFileNameWithoutExtension(filePath);
-
-                    string[] fileNameSplit = fileName.Split('_');
-                    Store store = Stores[fileNameSplit[0]];
-                    Date date = new Date(Convert.ToInt32(fileNameSplit[1]), Convert.ToInt32(fileNameSplit[2]));
-                    Dates.Append(date);
-
-                    string[] orderData = File.ReadAllLines(FolderPath + @"\" + StoreDataFolder + @"\" + fileNameExt);
-                    foreach (var orderInfo in orderData)
-                    {
-                        string[] orderSplit = orderInfo.Split(',');
-                        Order order = new Order(store, date, orderSplit[0], orderSplit[1], Convert.ToDouble(orderSplit[2]));
-                        Orders.Add(order);
-                    }
-                });
-
-                stopWatch.Stop();
-                Console.WriteLine("TimeToLoad: " + stopWatch.Elapsed.TotalSeconds);
+        public static async Task ReloadData()
+        {
+            IOException ioE = null;
+            try
+            {
+                await LoadData();
             }
             catch (DirectoryNotFoundException e)
             {
@@ -116,12 +78,63 @@ namespace SpurStoreBigData
             }
             catch (UnauthorizedAccessException e)
             {
-                throw new IOException(e.Message, e);
+                throw new IOException("Unable to access the directory and/or files", e);
             }
             catch (Exception e)
             {
                 throw new IOException("Error loading store data", e);
             }
+        }
+
+        private static Task LoadData()
+        {
+            Stores = new ConcurrentDictionary<string, Store>();
+            Dates = new ConcurrentStack<Date>();
+            Orders = new ConcurrentBag<Order>();
+
+            string storeCodesFilePath = FolderPath + @"\" + StoreCodesFile;
+
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+
+            string[] fileNames = Directory.GetFiles(FolderPath + @"\" + StoreDataFolder);
+            string[] storeCodesData = File.ReadAllLines(storeCodesFilePath);
+            //foreach(var storeData in storeCodesData)
+            Parallel.ForEach(storeCodesData, storeData =>
+            {
+                string[] storeDataSplit = storeData.Split(',');
+                Store store = new Store(storeDataSplit[0], storeDataSplit[1]);
+                if (!Stores.ContainsKey(store.StoreCode))
+                    Stores.TryAdd(store.StoreCode, store);
+
+                //storeDataSplit[0] = store code
+                //storeDataSplit[1] = store location
+            });
+
+            //foreach(var filePath in fileNames)
+            Parallel.ForEach(fileNames, filePath =>
+            {
+                string fileNameExt = Path.GetFileName(filePath);
+                string fileName = Path.GetFileNameWithoutExtension(filePath);
+
+                string[] fileNameSplit = fileName.Split('_');
+                Store store = Stores[fileNameSplit[0]];
+                Date date = new Date(Convert.ToInt32(fileNameSplit[1]), Convert.ToInt32(fileNameSplit[2]));
+                Dates.Append(date);
+
+                string[] orderData = File.ReadAllLines(FolderPath + @"\" + StoreDataFolder + @"\" + fileNameExt);
+                foreach (var orderInfo in orderData)
+                {
+                    string[] orderSplit = orderInfo.Split(',');
+                    Order order = new Order(store, date, orderSplit[0], orderSplit[1], Convert.ToDouble(orderSplit[2]));
+                    Orders.Add(order);
+                }
+            });
+
+            stopWatch.Stop();
+            Console.WriteLine("TimeToLoad: " + stopWatch.Elapsed.TotalSeconds);
+
+            return Task.CompletedTask;
         }
     }
 }

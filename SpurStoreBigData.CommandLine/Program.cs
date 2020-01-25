@@ -13,28 +13,13 @@ namespace SpurStoreBigData.CommandLine
 {
     class Program
     {
-        private static Dictionary<int, string> Items { get; set; } = new Dictionary<int, string>();
+        private static Dictionary<int, string> MenuItems { get; set; } = new Dictionary<int, string>();
 
         static void Main(string[] args)
         {
             SetupConsole();
 
             Menu();
-        }
-
-        private static void ChangeDataFolder()
-        {
-            // F:\BSc Software Engineering\Year 2\Task-based Software Engineering\Data
-            Console.Write("Data Folder path > ");
-            string path = Console.ReadLine();
-
-            while (path == "")
-            {
-                Console.Write("Data Folder path > ");
-                path = Console.ReadLine();
-            }
-
-            FolderPath = path;
         }
 
         private static void Menu()
@@ -52,11 +37,9 @@ namespace SpurStoreBigData.CommandLine
                     case 1:
                         try
                         {
-                            ReloadData();
-
-                            foreach (var store in Stores.OrderBy(s => s.Key))
+                            foreach (var store in GetStores())
                             {
-                                Console.WriteLine(store.Value);
+                                Console.WriteLine(store);
                             }
                         }
                         catch (Exception e)
@@ -69,6 +52,14 @@ namespace SpurStoreBigData.CommandLine
                     case 3:
                         break;
                     case 4:
+                        try
+                        {
+                            Console.WriteLine("{0:C}", GetTotalCostOfAllOrders());
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
                         break;
                     case 5:
                         break;
@@ -90,6 +81,7 @@ namespace SpurStoreBigData.CommandLine
                         ChangeDataFolder();
                         break;
                     case 14:
+                        TryLoadData();
                         break;
                     case 15:
                         Environment.Exit(0);
@@ -101,6 +93,37 @@ namespace SpurStoreBigData.CommandLine
                 Console.Write("Press any key to continue");
                 Console.ReadKey();
             }
+        }
+
+        private static void ChangeDataFolder()
+        {
+            // F:\BSc Software Engineering\Year 2\Task-based Software Engineering\Data
+
+            do
+            {
+                Console.Write("Data Folder path > ");
+                string path = Console.ReadLine();
+
+                FolderPath = path;
+
+            } while (!TryLoadData());
+        }
+
+        private static bool TryLoadData()
+        {
+            bool result = false;
+
+            try
+            {
+                ReloadData();
+                result = true;
+            }
+            catch (IOException e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+            return result;
         }
 
         private static int MenuResponse()
@@ -127,7 +150,7 @@ namespace SpurStoreBigData.CommandLine
 
         private static void OutputMenuItems()
         {
-            foreach (var item in Items)
+            foreach (var item in MenuItems)
             {
                 if (item.Value == null)
                 {
@@ -142,28 +165,28 @@ namespace SpurStoreBigData.CommandLine
         {
             Console.Title = "Spur Ltd Big Data";
 
-            Items.Add(1, "List all stores");
-            Items.Add(Items.Keys.Last() + 1, "List all suppliers");
-            Items.Add(Items.Keys.Last() + 1, "List all supplier types\n");
+            MenuItems.Add(1, "List all stores");
+            MenuItems.Add(MenuItems.Keys.Last() + 1, "List all suppliers");
+            MenuItems.Add(MenuItems.Keys.Last() + 1, "List all supplier types\n");
 
-            Items.Add(Items.Keys.Last() + 1, "Total cost of all orders");
-            Items.Add(Items.Keys.Last() + 1, "Total cost of all orders for a store");
-            Items.Add(Items.Keys.Last() + 1, "Total cost of all orders in a week");
-            Items.Add(Items.Keys.Last() + 1, "Total cost of all orders in a week for a store");
-            Items.Add(Items.Keys.Last() + 1, "Total cost of all orders to a supplier");
-            Items.Add(Items.Keys.Last() + 1, "Cost of all orders from a supplier type");
-            Items.Add(Items.Keys.Last() + 1, "Cost of all orders in a week from a supplier type");
-            Items.Add(Items.Keys.Last() + 1, "Cost of all orders for a supplier type for a store");
-            Items.Add(Items.Keys.Last() + 1, "Cost of all orders in a week for a supplier type for a store\n");
+            MenuItems.Add(MenuItems.Keys.Last() + 1, "Total cost of all orders");
+            MenuItems.Add(MenuItems.Keys.Last() + 1, "Total cost of all orders for a store");
+            MenuItems.Add(MenuItems.Keys.Last() + 1, "Total cost of all orders in a week");
+            MenuItems.Add(MenuItems.Keys.Last() + 1, "Total cost of all orders in a week for a store");
+            MenuItems.Add(MenuItems.Keys.Last() + 1, "Total cost of all orders to a supplier\n");
+            MenuItems.Add(MenuItems.Keys.Last() + 1, "Cost of all orders from a supplier type");
+            MenuItems.Add(MenuItems.Keys.Last() + 1, "Cost of all orders in a week from a supplier type");
+            MenuItems.Add(MenuItems.Keys.Last() + 1, "Cost of all orders for a supplier type for a store");
+            MenuItems.Add(MenuItems.Keys.Last() + 1, "Cost of all orders in a week for a supplier type for a store\n");
 
             // Graphs
-            //Items.Add(Items.Keys.Last() + 1, "Cost of all orders in a week from a supplier type");
-            //Items.Add(Items.Keys.Last() + 1, "Cost of all orders for a supplier type for a store");
-            //Items.Add(Items.Keys.Last() + 1, "Cost of all orders in a week for a supplier type for a store\n");
+            //MenuItems.Add(MenuItems.Keys.Last() + 1, "Cost of all orders in a week from a supplier type");
+            //MenuItems.Add(MenuItems.Keys.Last() + 1, "Cost of all orders for a supplier type for a store");
+            //MenuItems.Add(MenuItems.Keys.Last() + 1, "Cost of all orders in a week for a supplier type for a store\n");
 
-            Items.Add(Items.Keys.Last() + 1, "Change data path");
-            Items.Add(Items.Keys.Last() + 1, "Reload all data\n");
-            Items.Add(Items.Keys.Last() + 1, "Exit");
+            MenuItems.Add(MenuItems.Keys.Last() + 1, "Change data path");
+            MenuItems.Add(MenuItems.Keys.Last() + 1, "Reload all data\n");
+            MenuItems.Add(MenuItems.Keys.Last() + 1, "Exit");
         }
     }
 }
