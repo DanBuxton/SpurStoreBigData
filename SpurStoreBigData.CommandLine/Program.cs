@@ -116,6 +116,8 @@ namespace SpurStoreBigData.CommandLine
             try
             {
                 ReloadData();
+
+
                 result = true;
             }
             catch (IOException e)
