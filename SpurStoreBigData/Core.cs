@@ -88,6 +88,7 @@ namespace SpurStoreBigData
                 LoadCompleted = true;
             });
 
+            // USE THREADS
             while (!LoadCompleted) ; // Need a better way of doing this. 
 
             if (ioE != null)
