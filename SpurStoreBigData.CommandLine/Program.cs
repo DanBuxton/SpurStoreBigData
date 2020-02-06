@@ -15,11 +15,72 @@ namespace SpurStoreBigData.CommandLine
     {
         private static Dictionary<int, string> MenuItems { get; set; } = new Dictionary<int, string>();
 
+        static string folderPath = "C:\\temp\\b018939i\\Data";
+        static string storeCodesFile = "StoreCodes.csv";
+        static string storeDataFolder = "StoreData";
+
         static void Main(string[] args)
         {
-            SetupConsole();
+            Dictionary<string, Store> stores = new Dictionary<string, Store>();
+            HashSet<Date> dates = new HashSet<Date>();
+            List<Order> orders = new List<Order>();
 
-            Menu();
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+
+            string storeCodesFilePath = folderPath + @"\" + storeCodesFile;
+            string[] storeCodesData = File.ReadAllLines(storeCodesFilePath);
+            foreach (var storeData in storeCodesData)
+            {
+                string[] storeDataSplit = storeData.Split(',');
+                Store store = new Store(storeDataSplit[0], storeDataSplit[1]);
+                if (!stores.ContainsKey(store.StoreCode))
+                    stores.Add(store.StoreCode, store);
+
+                //storeDataSplit[0] = store code
+                //storeDataSplit[1] = store location
+            }
+
+            string[] fileNames = Directory.GetFiles(folderPath + @"\" + storeDataFolder);
+            //foreach (var filePath in fileNames)
+            Parallel.ForEach(fileNames, filePath =>
+            {
+                string fileNameExt = Path.GetFileName(filePath);
+                string fileName = Path.GetFileNameWithoutExtension(filePath);
+
+                string[] fileNameSplit = fileName.Split('_');
+                Store store = stores[fileNameSplit[0]];
+                Date date = new Date(Convert.ToInt32(fileNameSplit[1]), Convert.ToInt32(fileNameSplit[2]));
+                dates.Add(date);
+                //fileNameSplit[0] = store code
+                //fileNameSplit[1] = week number
+                //fileNameSplit[2] = year
+
+                string[] orderData = File.ReadAllLines(folderPath + @"\" + storeDataFolder + @"\" + fileNameExt);
+                foreach (var orderInfo in orderData)
+                {
+                    string[] orderSplit = orderInfo.Split(',');
+                    Order order = new Order
+                    (
+                        store,
+                        date,
+                        orderSplit[0],
+                        orderSplit[1],
+                        Convert.ToDouble(orderSplit[2])
+                    );
+                    orders.Add(order);
+                    //orderSplit[0] = supplier name
+                    //orderSplit[1] = supplier type
+                    //orderSplit[2] = cost
+                }
+            });
+
+            stopWatch.Stop();
+            Console.WriteLine("TimeToLoad: " + stopWatch.Elapsed.TotalSeconds);
+
+            //SetupConsole();
+
+            //Menu();
         }
 
         private static void Menu()

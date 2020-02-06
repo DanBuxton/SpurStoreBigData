@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace SpurStoreBigData
 {
-    public class Core
+    public static class Core
     {
         private static ConcurrentDictionary<string, Store> Stores { get; set; } = new ConcurrentDictionary<string, Store>();
         private static ConcurrentStack<Date> Dates { get; set; } = new ConcurrentStack<Date>();
@@ -146,8 +146,7 @@ namespace SpurStoreBigData
 
                 string[] fileNames = Directory.GetFiles(FolderPath + @"\" + StoreDataFolder);
                 string[] storeCodesData = File.ReadAllLines(storeCodesFilePath);
-                //foreach(var storeData in storeCodesData)
-                Parallel.ForEach(storeCodesData, storeData =>
+                foreach (var storeData in storeCodesData) // Take 0.01s
                 {
                     string[] storeDataSplit = storeData.Split(',');
                     Store store = new Store(storeDataSplit[0], storeDataSplit[1]);
@@ -156,7 +155,7 @@ namespace SpurStoreBigData
 
                     //storeDataSplit[0] = store code
                     //storeDataSplit[1] = store location
-                });
+                }
 
                 //foreach(var filePath in fileNames)
                 Parallel.ForEach(fileNames, filePath =>
@@ -167,7 +166,7 @@ namespace SpurStoreBigData
                     string[] fileNameSplit = fileName.Split('_');
                     Store store = Stores[fileNameSplit[0]];
                     Date date = new Date(Convert.ToInt32(fileNameSplit[1]), Convert.ToInt32(fileNameSplit[2]));
-                    Dates.Append(date);
+                    Dates.Push(date);
 
                     string[] orderData = File.ReadAllLines(FolderPath + @"\" + StoreDataFolder + @"\" + fileNameExt);
                     foreach (var orderInfo in orderData)
