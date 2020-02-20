@@ -52,7 +52,7 @@ namespace SpurStoreBigData.CommandLine
                 case 1: // List all stores
                     try
                     {
-                        foreach (var store in Core.Stores.OrderBy(s=>s.StoreCode))
+                        foreach (var store in Core.GetStores())
                         {
                             Console.WriteLine(store);
                         }
@@ -65,9 +65,9 @@ namespace SpurStoreBigData.CommandLine
                 case 2: // List all suppliers (Name)
                     try
                     {
-                        foreach (var supplier in Core.Suppliers.AsParallel().OrderBy(o=>o.Name))
+                        foreach (var s in Core.GetSupplierNames())
                         {
-                            Console.WriteLine(supplier.Name);
+                            Console.WriteLine(s);
                         }
                     }
                     catch (Exception e)
@@ -78,9 +78,9 @@ namespace SpurStoreBigData.CommandLine
                 case 3: // List all suppliers (Type)
                     try
                     {
-                        foreach (var supplier in Core.Suppliers.AsParallel().OrderBy(o => o.Type))
+                        foreach (var t in Core.GetSupplierTypes())
                         {
-                            Console.WriteLine(supplier.Type);
+                            Console.WriteLine(t);
                         }
                     }
                     catch (Exception e)
@@ -92,7 +92,6 @@ namespace SpurStoreBigData.CommandLine
                     try
                     {
                         Console.WriteLine("{0:C}", Core.GetTotalCostOfAllOrders());
-                        Console.WriteLine("Orders: {0:D}", Core.Orders.Length);
                     }
                     catch (Exception e)
                     {

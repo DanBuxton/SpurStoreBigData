@@ -17,11 +17,6 @@ namespace SpurStoreBigData
         private ConcurrentBag<Order> orders = new ConcurrentBag<Order>();
         private ConcurrentDictionary<string, Supplier> suppliers = new ConcurrentDictionary<string, Supplier>();
 
-        public Store[] Stores { get { return stores.Values.ToArray(); } }
-        public Date[] Dates { get { return dates.ToArray(); } }
-        public Order[] Orders { get { return orders.ToArray(); } }
-        public Supplier[] Suppliers { get { return suppliers.Values.ToArray(); } }
-
         public string FolderPath { get; set; }
         public static string StoreCodesFile { get; private set; } = "StoreCodes.csv";
         public static string StoreDataFolder { get; private set; } = "StoreData";
@@ -30,32 +25,60 @@ namespace SpurStoreBigData
         /// Get all stores from the available data. 
         /// </summary>
         /// <returns>All stores as <code>Store[]</code>. </returns>
-        //public Store[] GetStores()
-        //{
-        //    try
-        //    {
-        //        return stores.Values.OrderBy(s => s.StoreCode).ToArray();
-        //    }
-        //    catch (ArgumentNullException e)
-        //    {
-        //        throw new Exception("Unable to complete that task", e);
-        //    }
-        //}
+        public Store[] GetStores()
+        {
+            try
+            {
+                return stores.Values.OrderBy(s => s.StoreCode).ToArray();
+            }
+            catch (ArgumentNullException e)
+            {
+                throw new Exception("Unable to complete that task", e);
+            }
+        }
+
         /// <summary>
-        /// Get all suppliers from the available data. 
+        /// Get all supplier types from the available data. 
         /// </summary>
         /// <returns>All stores as <code>Supplier[]</code>. </returns>
-        //public Supplier[] GetSuppliers()
-        //{
-        //    try
-        //    {
-        //        return suppliers.Values.ToArray();
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        throw new Exception("Unable to complete that task", e);
-        //    }
-        //}
+        public string[] GetSupplierNames()
+        {
+            //string[] result = null;
+
+            try
+            {
+                return suppliers.Keys
+                    .OrderBy(s=>s)
+                    .ToArray();
+
+                //result = new string[suppliers.Count];
+                //for (int i = 0; i < result.Length; i++)
+                //{
+                //    var s = suppliers.Values.OrderBy(v => v.Name).ToArray();
+                //    result[i] = s[i].Name;
+                //}
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Unable to complete that task", e);
+            }
+        }
+
+        /// <summary>
+        /// Get all supplier types from the available data. 
+        /// </summary>
+        /// <returns>All supplier types as <code>string[]</code>. </returns>
+        public string[] GetSupplierTypes()
+        {
+            try
+            {
+                return suppliers.Values.GroupBy(s=>s.Type).Select(s=>s.Key).OrderBy(s => s).ToArray();
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Unable to complete that task", e);
+            }
+        }
 
         /// <summary>
         /// Get the total cost of all orders from the available data. 
@@ -80,6 +103,7 @@ namespace SpurStoreBigData
         /// <summary>
         /// Reload data from files via <code>FolderPath</code> property. 
         /// </summary>
+        /// <returns>Custom <code>IOException</code> if issue found, else <code>null</code>. </returns>
         public IOException ReloadData(CancellationTokenSource cts) => LoadData(cts);
 
         private IOException LoadData(CancellationTokenSource cts)
@@ -99,8 +123,6 @@ namespace SpurStoreBigData
 
                     Stopwatch stopWatch = new Stopwatch();
                     stopWatch.Start();
-                    string[] fileNames = Directory.GetFiles(FolderPath + @"\" + StoreDataFolder);
-                    string[] storeCodesData = File.ReadAllLines(storeCodesFilePath);
                     //foreach (var storeData in storeCodesData) // Take 0.01s
                     //{
                     //    string[] storeDataSplit = storeData.Split(',');
@@ -112,18 +134,16 @@ namespace SpurStoreBigData
                     //    //storeDataSplit[1] = store location
                     //}
 
-
+                    string[] storeCodesData = File.ReadAllLines(storeCodesFilePath);
                     foreach (var storeData in storeCodesData) // Take 0.01s
                     {
                         string[] storeDataSplit = storeData.Split(',');
 
                         if (!stores.ContainsKey(storeDataSplit[0]))
                             stores.TryAdd(storeDataSplit[0], new Store(storeDataSplit[0], storeDataSplit[1]));
-
-                        //storeDataSplit[0] = store code
-                        //storeDataSplit[1] = store location
                     }
 
+                    string[] fileNames = Directory.GetFiles(FolderPath + @"\" + StoreDataFolder);
                     Parallel.ForEach(fileNames, filePath =>
                     {
                         string fileNameExt = Path.GetFileName(filePath);
@@ -139,8 +159,8 @@ namespace SpurStoreBigData
                         {
                             string[] orderSplit = orderInfo.Split(',');
 
-                            Supplier s = suppliers.GetOrAdd(orderSplit[0], new Supplier(orderSplit[0], orderSplit[1]));
-                            Order o = new Order(store, date, s, Convert.ToDouble(orderSplit[2]));
+                            Supplier supplier = suppliers.GetOrAdd(orderSplit[0], new Supplier(orderSplit[0], orderSplit[1]));
+                            Order o = new Order(store, date, supplier, Convert.ToDouble(orderSplit[2]));
                             orders.Add(o);
                         }
                     });
