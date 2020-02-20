@@ -12,6 +12,9 @@ namespace SpurStoreBigData
 {
     public class Core
     {
+        public static Core Instance { get; private set; } = new Core();
+        private Core() { }
+
         private ConcurrentDictionary<string, Store> stores = new ConcurrentDictionary<string, Store>();
         private ConcurrentStack<Date> dates = new ConcurrentStack<Date>();
         private ConcurrentBag<Order> orders = new ConcurrentBag<Order>();
@@ -36,7 +39,6 @@ namespace SpurStoreBigData
                 throw new Exception("Unable to complete that task", e);
             }
         }
-
         /// <summary>
         /// Get all supplier types from the available data. 
         /// </summary>
@@ -48,7 +50,7 @@ namespace SpurStoreBigData
             try
             {
                 return suppliers.Keys
-                    .OrderBy(s=>s)
+                    .OrderBy(s => s)
                     .ToArray();
 
                 //result = new string[suppliers.Count];
@@ -63,7 +65,6 @@ namespace SpurStoreBigData
                 throw new Exception("Unable to complete that task", e);
             }
         }
-
         /// <summary>
         /// Get all supplier types from the available data. 
         /// </summary>
@@ -72,7 +73,7 @@ namespace SpurStoreBigData
         {
             try
             {
-                return suppliers.Values.GroupBy(s=>s.Type).Select(s=>s.Key).OrderBy(s => s).ToArray();
+                return suppliers.Values.GroupBy(s => s.Type).Select(s => s.Key).OrderBy(s => s).ToArray();
             }
             catch (Exception e)
             {
@@ -83,14 +84,94 @@ namespace SpurStoreBigData
         /// <summary>
         /// Get the total cost of all orders from the available data. 
         /// </summary>
-        /// <returns>Cost of all orders or <code>NaN</code> if an issue arises. </returns>
+        /// <returns>Cost of all orders or throws a custom <code>Exception</code> if an issue arises. </returns>
         public double GetTotalCostOfAllOrders()
         {
             try
             {
-                double result = 0.0;
+                double result = 0.00;
 
-                foreach (var o in orders) result += o.Cost;
+                foreach (Order o in orders) result += o.Cost;
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Unable to complete that task", e);
+            }
+        }
+        public double GetTotalCostOfAllOrdersForAStore(string storeCode)
+        {
+            try
+            {
+                Stopwatch s = new Stopwatch();
+                s.Start();
+                double result = 0.00;
+
+                foreach (Order o in orders.Where(o => o.Store.StoreCode.Equals(storeCode.ToUpper()))) result += o.Cost;
+
+                s.Stop();
+                Console.WriteLine(s.Elapsed.TotalSeconds);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Unable to complete that task", e);
+            }
+        }
+        public double GetTotalCostOfAllOrdersInAWeek(int week)
+        {
+            try
+            {
+                Stopwatch s = new Stopwatch();
+                s.Start();
+                double result = 0.00;
+
+                foreach (Order o in orders.Where(o => o.Date.Week.Equals(week))) result += o.Cost;
+
+                s.Stop();
+                Console.WriteLine(s.Elapsed.TotalSeconds);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Unable to complete that task", e);
+            }
+        }
+        public double GetTotalCostOfAllOrdersInAWeekForAStore(int week, string storeCode)
+        {
+            try
+            {
+                Stopwatch s = new Stopwatch();
+                s.Start();
+                double result = 0.00;
+
+                foreach (Order o in orders.AsParallel().Where(o => o.Date.Week.Equals(week)).Where(o => o.Store.StoreCode.Equals(storeCode.ToUpper())).AsSequential()) result += o.Cost;
+
+                s.Stop();
+                Console.WriteLine(s.Elapsed.TotalSeconds);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Unable to complete that task", e);
+            }
+        }
+        public double GetTotalCostOfAllOrdersForASupplier(string supplierName)
+        {
+            try
+            {
+                Stopwatch s = new Stopwatch();
+                s.Start();
+                double result = 0.00;
+
+                foreach (var o in orders.AsParallel().Where(o => o.Supplier.Name.ToLower().Equals(supplierName.ToLower()))) result += o.Cost;
+
+                s.Stop();
+                Console.WriteLine(s.Elapsed.TotalSeconds);
 
                 return result;
             }
@@ -144,7 +225,9 @@ namespace SpurStoreBigData
                     }
 
                     string[] fileNames = Directory.GetFiles(FolderPath + @"\" + StoreDataFolder);
-                    Parallel.ForEach(fileNames, filePath =>
+                    //foreach (var filePath in fileNames)
+                    //fileNames.AsParallel().ForAll(filePath =>
+                    Parallel.ForEach(fileNames,new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount/2 } , filePath =>
                     {
                         string fileNameExt = Path.GetFileName(filePath);
                         string fileName = Path.GetFileNameWithoutExtension(filePath);
@@ -155,6 +238,7 @@ namespace SpurStoreBigData
                         dates.Push(date);
 
                         string[] orderData = File.ReadAllLines(FolderPath + @"\" + StoreDataFolder + @"\" + fileNameExt);
+                        //orderData.AsParallel().ForAll(orderInfo =>
                         foreach (var orderInfo in orderData)
                         {
                             string[] orderSplit = orderInfo.Split(',');
@@ -162,7 +246,7 @@ namespace SpurStoreBigData
                             Supplier supplier = suppliers.GetOrAdd(orderSplit[0], new Supplier(orderSplit[0], orderSplit[1]));
                             Order o = new Order(store, date, supplier, Convert.ToDouble(orderSplit[2]));
                             orders.Add(o);
-                        }
+                        }//);
                     });
 
                     //foreach(var filePath in fileNames)

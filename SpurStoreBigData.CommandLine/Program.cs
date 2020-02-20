@@ -17,7 +17,7 @@ namespace SpurStoreBigData.CommandLine
 
         static CancellationTokenSource cts = new CancellationTokenSource();
 
-        public static Core Core { get; set; } = new Core();
+        public static Core Core { get; set; } = Instance;
 
         private static Dictionary<int, string> MenuItems { get; set; } = new Dictionary<int, string>();
 
@@ -99,12 +99,44 @@ namespace SpurStoreBigData.CommandLine
                     }
                     break;
                 case 5: // Cost of all orders for a store
+                    try
+                    {
+                        Console.WriteLine("{0:C}", Core.GetTotalCostOfAllOrdersForAStore("Der1"));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                     break;
                 case 6: // Cost of all orders in a week
+                    try
+                    {
+                        Console.WriteLine("{0:C}", Core.GetTotalCostOfAllOrdersInAWeek(1));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                     break;
                 case 7: // Cost of all orders in a week for a store
+                    try
+                    {
+                        Console.WriteLine("{0:C}", Core.GetTotalCostOfAllOrdersInAWeekForAStore(1, "deR1"));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                     break;
                 case 8: // Cost of all oders to a supplier
+                    try
+                    {
+                        Console.WriteLine("{0:C}", Core.GetTotalCostOfAllOrdersForASupplier("Blue Diamond"));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                     break;
                 case 9: // Cost of all orders from a supplier type
                     break;
