@@ -19,7 +19,7 @@ namespace SpurStoreBigData
 
         public override string ToString()
         {
-            return string.Format("{0, 15s} : {1, -5}", Name, Type);
+            return string.Format("{0, 15} : {1, -5}", Name, Type);
         }
     }
 }

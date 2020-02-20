@@ -8,25 +8,22 @@ namespace SpurStoreBigData
 {
     public class Order
     {
-        public Store Store { get; set; }
+        public Store Store { get; protected set; }
+        public Date Date { get; protected set; }
+        public Supplier Supplier { get; protected set; }
+        public double Cost { get; protected set; }
 
-        public Date Date { get; set; }
-        public string SupplierName { get; set; }
-        public string SupplierType { get; set; }
-        public double Cost { get; set; }
-
-        public Order(Store store, Date date, string supplierName, string supplierType, double cost)
+        public Order(Store store, Date date, Supplier supplier, double cost)
         {
             Store = store;
             Date = date;
-            SupplierName = supplierName;
-            SupplierType = supplierType;
+            Supplier = supplier;
             Cost = cost;
         }
 
         public override string ToString()
         {
-            return string.Format("{0} {1} {2:s} {3, 10:s} {4:C} cost", Store, Date, SupplierName, SupplierType, Cost);
+            return string.Format("{0} {1} {2:s} {3, 10:s} {4:C} cost", Store, Date, Supplier.Name, Supplier.Type, Cost);
         }
     }
 }

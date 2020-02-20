@@ -10,19 +10,19 @@ using System.Threading.Tasks;
 
 namespace SpurStoreBigData
 {
-    public static class Core
+    public class Core
     {
-        private static ConcurrentDictionary<string, Store> Stores { get; set; } = new ConcurrentDictionary<string, Store>();
-        private static ConcurrentStack<Date> Dates { get; set; } = new ConcurrentStack<Date>();
-        private static ConcurrentBag<Order> Orders { get; set; } = new ConcurrentBag<Order>();
+        private ConcurrentDictionary<string, Store> stores = new ConcurrentDictionary<string, Store>();
+        private ConcurrentStack<Date> dates = new ConcurrentStack<Date>();
+        private ConcurrentBag<Order> orders = new ConcurrentBag<Order>();
+        private ConcurrentDictionary<string, Supplier> suppliers = new ConcurrentDictionary<string, Supplier>();
 
-        public static bool LoadCompleted { get; private set; }
+        public Store[] Stores { get { return stores.Values.ToArray(); } }
+        public Date[] Dates { get { return dates.ToArray(); } }
+        public Order[] Orders { get { return orders.ToArray(); } }
+        public Supplier[] Suppliers { get { return suppliers.Values.ToArray(); } }
 
-        public static int StoresCount { get { return Stores.Count; } }
-        public static int DatesCount { get { return Dates.Count; } }
-        public static int OrdersCount { get { return Orders.Count; } }
-
-        public static string FolderPath { get; set; }
+        public string FolderPath { get; set; }
         public static string StoreCodesFile { get; private set; } = "StoreCodes.csv";
         public static string StoreDataFolder { get; private set; } = "StoreData";
 
@@ -30,29 +30,44 @@ namespace SpurStoreBigData
         /// Get all stores from the available data. 
         /// </summary>
         /// <returns>All stores as <code>Store[]</code>. </returns>
-        public static Store[] GetStores()
-        {
-            try
-            {
-                return Stores.Values.OrderBy(s => s.StoreCode).ToArray();
-            }
-            catch (ArgumentNullException e)
-            {
-                throw new Exception("Unable to complete that task", e);
-            }
-        }
+        //public Store[] GetStores()
+        //{
+        //    try
+        //    {
+        //        return stores.Values.OrderBy(s => s.StoreCode).ToArray();
+        //    }
+        //    catch (ArgumentNullException e)
+        //    {
+        //        throw new Exception("Unable to complete that task", e);
+        //    }
+        //}
+        /// <summary>
+        /// Get all suppliers from the available data. 
+        /// </summary>
+        /// <returns>All stores as <code>Supplier[]</code>. </returns>
+        //public Supplier[] GetSuppliers()
+        //{
+        //    try
+        //    {
+        //        return suppliers.Values.ToArray();
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        throw new Exception("Unable to complete that task", e);
+        //    }
+        //}
 
         /// <summary>
         /// Get the total cost of all orders from the available data. 
         /// </summary>
         /// <returns>Cost of all orders or <code>NaN</code> if an issue arises. </returns>
-        public static double GetTotalCostOfAllOrders()
+        public double GetTotalCostOfAllOrders()
         {
             try
             {
                 double result = 0.0;
 
-                foreach (var o in Orders) result += o.Cost;
+                foreach (var o in orders) result += o.Cost;
 
                 return result;
             }
@@ -64,148 +79,127 @@ namespace SpurStoreBigData
 
         /// <summary>
         /// Reload data from files via <code>FolderPath</code> property. 
-        /// NEED A BETTER WAY OF DOING THIS. 
         /// </summary>
-        public static void ReloadData()
+        public IOException ReloadData(CancellationTokenSource cts) => LoadData(cts);
+
+        private IOException LoadData(CancellationTokenSource cts)
         {
-            IOException ioE = null;
+            IOException e = null;
 
-            LoadCompleted = false;
-
-            Task.Run(() =>
+            return Task<IOException>.Factory.StartNew(() =>
             {
-                //CancellationToken ct = Task.Factory.CancellationToken;
-
                 try
                 {
-                    LoadData();
-                }
-                catch (IOException e)
-                {
-                    ioE = e;
-                }
+                    stores = new ConcurrentDictionary<string, Store>();
+                    dates = new ConcurrentStack<Date>();
+                    orders = new ConcurrentBag<Order>();
+                    suppliers = new ConcurrentDictionary<string, Supplier>();
 
-                LoadCompleted = true;
-            });
+                    string storeCodesFilePath = FolderPath + @"\" + StoreCodesFile;
 
-            // USE THREADS
-            while (!LoadCompleted) ; // Need a better way of doing this. 
+                    Stopwatch stopWatch = new Stopwatch();
+                    stopWatch.Start();
+                    string[] fileNames = Directory.GetFiles(FolderPath + @"\" + StoreDataFolder);
+                    string[] storeCodesData = File.ReadAllLines(storeCodesFilePath);
+                    //foreach (var storeData in storeCodesData) // Take 0.01s
+                    //{
+                    //    string[] storeDataSplit = storeData.Split(',');
 
-            if (ioE != null)
-            {
-                throw ioE;
-            }
+                    //    if (!stores.ContainsKey(storeDataSplit[0]))
+                    //        stores.TryAdd(storeDataSplit[0], new Store(storeDataSplit[0], storeDataSplit[1]));
 
-            //IOException ioE = null;
-            //Task.Factory.StartNew(async () =>
-            //{
-            //    try
-            //    {
-            //        await LoadData();
-            //    }
-            //    catch (DirectoryNotFoundException e)
-            //    {
-            //        ioE = new IOException("Unable to locate directory (" + FolderPath + ")", e);
-            //    }
-            //    catch (FileNotFoundException e)
-            //    {
-            //        ioE = new IOException("Unable to locate StoreCodes.csv at (" + FolderPath + ")", e);
-            //    }
-            //    catch (PathTooLongException e)
-            //    {
-            //        ioE = new IOException("File path (" + FolderPath + ") is too long", e);
-            //    }
-            //    catch (UnauthorizedAccessException e)
-            //    {
-            //        ioE = new IOException("Unable to access the directory and/or files", e);
-            //    }
-            //    catch (Exception e)
-            //    {
-            //        ioE = new IOException("Error loading store data", e);
-            //    }
-            //});
+                    //    //storeDataSplit[0] = store code
+                    //    //storeDataSplit[1] = store location
+                    //}
 
-            //if (ioE != null)
-            //{
-            //    throw ioE;
-            //}
-        }
 
-        private static /*Task*/ void LoadData()
-        {
-            try
-            {
-                Stores = new ConcurrentDictionary<string, Store>();
-                Dates = new ConcurrentStack<Date>();
-                Orders = new ConcurrentBag<Order>();
-
-                string storeCodesFilePath = FolderPath + @"\" + StoreCodesFile;
-
-                Stopwatch stopWatch = new Stopwatch();
-                stopWatch.Start();
-
-                string[] fileNames = Directory.GetFiles(FolderPath + @"\" + StoreDataFolder);
-                string[] storeCodesData = File.ReadAllLines(storeCodesFilePath);
-                foreach (var storeData in storeCodesData) // Take 0.01s
-                {
-                    string[] storeDataSplit = storeData.Split(',');
-                    Store store = new Store(storeDataSplit[0], storeDataSplit[1]);
-                    if (!Stores.ContainsKey(store.StoreCode))
-                        Stores.TryAdd(store.StoreCode, store);
-
-                    //storeDataSplit[0] = store code
-                    //storeDataSplit[1] = store location
-                }
-
-                //foreach(var filePath in fileNames)
-                Parallel.ForEach(fileNames, filePath =>
-                {
-                    string fileNameExt = Path.GetFileName(filePath);
-                    string fileName = Path.GetFileNameWithoutExtension(filePath);
-
-                    string[] fileNameSplit = fileName.Split('_');
-                    Store store = Stores[fileNameSplit[0]];
-                    Date date = new Date(Convert.ToInt32(fileNameSplit[1]), Convert.ToInt32(fileNameSplit[2]));
-                    Dates.Push(date);
-
-                    string[] orderData = File.ReadAllLines(FolderPath + @"\" + StoreDataFolder + @"\" + fileNameExt);
-                    foreach (var orderInfo in orderData)
+                    foreach (var storeData in storeCodesData) // Take 0.01s
                     {
-                        string[] orderSplit = orderInfo.Split(',');
-                        Order order = new Order(store, date, orderSplit[0], orderSplit[1], Convert.ToDouble(orderSplit[2]));
-                        Orders.Add(order);
+                        string[] storeDataSplit = storeData.Split(',');
+
+                        if (!stores.ContainsKey(storeDataSplit[0]))
+                            stores.TryAdd(storeDataSplit[0], new Store(storeDataSplit[0], storeDataSplit[1]));
+
+                        //storeDataSplit[0] = store code
+                        //storeDataSplit[1] = store location
                     }
-                });
 
-                stopWatch.Stop();
-                Console.WriteLine("TimeToLoad: " + stopWatch.Elapsed.TotalSeconds); // For testing purposes. 
-            }
-            catch (DirectoryNotFoundException e)
-            {
-                throw new IOException("Unable to locate directory '" + FolderPath + "'", e);
-            }
-            catch (FileNotFoundException e)
-            {
-                throw new IOException("Unable to locate StoreCodes.csv at '" + FolderPath + "'", e);
-            }
-            catch (PathTooLongException e)
-            {
-                throw new IOException("File path '" + FolderPath + "' is too long", e);
-            }
-            catch (UnauthorizedAccessException e)
-            {
-                throw new IOException("Unable to access the directory and/or files", e);
-            }
-            catch (NotSupportedException e)
-            {
-                throw new IOException("The path '" + FolderPath + "' is not supported", e);
-            }
-            catch (Exception e)
-            {
-                throw new IOException("Error loading store data", e);
-            }
+                    Parallel.ForEach(fileNames, filePath =>
+                    {
+                        string fileNameExt = Path.GetFileName(filePath);
+                        string fileName = Path.GetFileNameWithoutExtension(filePath);
 
-            //return Task.CompletedTask;
+                        string[] fileNameSplit = fileName.Split('_');
+                        Store store = stores[fileNameSplit[0]];
+                        Date date = new Date(Convert.ToInt32(fileNameSplit[1]), Convert.ToInt32(fileNameSplit[2]));
+                        dates.Push(date);
+
+                        string[] orderData = File.ReadAllLines(FolderPath + @"\" + StoreDataFolder + @"\" + fileNameExt);
+                        foreach (var orderInfo in orderData)
+                        {
+                            string[] orderSplit = orderInfo.Split(',');
+
+                            Supplier s = suppliers.GetOrAdd(orderSplit[0], new Supplier(orderSplit[0], orderSplit[1]));
+                            Order o = new Order(store, date, s, Convert.ToDouble(orderSplit[2]));
+                            orders.Add(o);
+                        }
+                    });
+
+                    //foreach(var filePath in fileNames)
+                    //Parallel.ForEach(fileNames, filePath =>
+                    //{
+                    //    string fileNameExt = Path.GetFileName(filePath);
+                    //    string fileName = Path.GetFileNameWithoutExtension(filePath);
+
+                    //    string[] fileNameSplit = fileName.Split('_');
+                    //    Store store = stores[fileNameSplit[0]];
+                    //    Date date = new Date(Convert.ToInt32(fileNameSplit[1]), Convert.ToInt32(fileNameSplit[2]));
+                    //    dates.Push(date);
+
+                    //    string[] orderData = File.ReadAllLines(FolderPath + @"\" + StoreDataFolder + @"\" + fileNameExt);
+                    //    foreach (var orderInfo in orderData)
+                    //    {
+                    //        string[] orderSplit = orderInfo.Split(',');
+                    //        Order order = new Order(store, date, orderSplit[0], orderSplit[1], Convert.ToDouble(orderSplit[2]));
+                    //        orders.Add(order);
+
+                    //        Supplier s = new Supplier(order.SupplierName, order.SupplierType);
+                    //        if (!suppliers.Contains(s)) // O(n^2)
+                    //        {
+                    //            suppliers.Append(s);
+                    //        }
+                    //    }
+                    //});
+                    stopWatch.Stop();
+                    Console.WriteLine("TimeToLoad: " + stopWatch.Elapsed.TotalSeconds); // For testing purposes. 
+                }
+                catch (DirectoryNotFoundException ex)
+                {
+                    e = new IOException("Unable to locate directory '" + FolderPath + "'", ex);
+                }
+                catch (FileNotFoundException ex)
+                {
+                    e = new IOException("Unable to locate StoreCodes.csv at '" + FolderPath + "'", ex);
+                }
+                catch (PathTooLongException ex)
+                {
+                    e = new IOException("File path '" + FolderPath + "' is too long", ex);
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    e = new IOException("Unable to access the directory and/or files", ex);
+                }
+                catch (NotSupportedException ex)
+                {
+                    e = new IOException("The path '" + FolderPath + "' is not supported", ex);
+                }
+                catch (Exception ex)
+                {
+                    e = new IOException("Error loading store data", ex);
+                }
+
+                return e;
+            }, cts.Token).Result;
         }
     }
 }
