@@ -27,6 +27,8 @@ namespace SpurStoreBigData.CommandLine
 
             ChangeDataFolder();
 
+            Console.ReadKey();
+
             Menu();
         }
 
@@ -111,7 +113,7 @@ namespace SpurStoreBigData.CommandLine
                 case 6: // Cost of all orders in a week
                     try
                     {
-                        Console.WriteLine("{0:C}", Core.GetTotalCostOfAllOrdersInAWeek(1));
+                        Console.WriteLine("{0:C}", Core.GetTotalCostOfAllOrdersInAWeek(1, 2013));
                     }
                     catch (Exception e)
                     {
@@ -121,7 +123,7 @@ namespace SpurStoreBigData.CommandLine
                 case 7: // Cost of all orders in a week for a store
                     try
                     {
-                        Console.WriteLine("{0:C}", Core.GetTotalCostOfAllOrdersInAWeekForAStore(1, "deR1"));
+                        Console.WriteLine("{0:C}", Core.GetTotalCostOfAllOrdersInAWeekForAStore(1, 2013, "deR1"));
                     }
                     catch (Exception e)
                     {
@@ -139,6 +141,14 @@ namespace SpurStoreBigData.CommandLine
                     }
                     break;
                 case 9: // Cost of all orders from a supplier type
+                    try
+                    {
+                        Console.WriteLine("{0:C}", Core.GetTotalCostOfAllOrdersForASupplierType("Groceries"));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                     break;
                 case 10: // Cost of all orders in a week from a supplier type
                     break;

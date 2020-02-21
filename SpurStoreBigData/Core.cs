@@ -27,7 +27,7 @@ namespace SpurStoreBigData
         /// <summary>
         /// Get all stores from the available data. 
         /// </summary>
-        /// <returns>All stores as <code>Store[]</code>. </returns>
+        /// <returns>All stores as <code>Store[]</code> or throws a custom <code>Exception</code> if an issue arises. </returns>
         public Store[] GetStores()
         {
             try
@@ -40,9 +40,9 @@ namespace SpurStoreBigData
             }
         }
         /// <summary>
-        /// Get all supplier types from the available data. 
+        /// Get all supplier names from the available data. 
         /// </summary>
-        /// <returns>All stores as <code>Supplier[]</code>. </returns>
+        /// <returns>All supplier names as <code>string[]</code> or throws a custom <code>Exception</code> if an issue arises. </returns>
         public string[] GetSupplierNames()
         {
             //string[] result = null;
@@ -68,7 +68,7 @@ namespace SpurStoreBigData
         /// <summary>
         /// Get all supplier types from the available data. 
         /// </summary>
-        /// <returns>All supplier types as <code>string[]</code>. </returns>
+        /// <returns>All supplier types as <code>string[]</code> or throws a custom <code>Exception</code> if an issue arises. </returns>
         public string[] GetSupplierTypes()
         {
             try
@@ -100,6 +100,11 @@ namespace SpurStoreBigData
                 throw new Exception("Unable to complete that task", e);
             }
         }
+        /// <summary>
+        /// Get the total cost of all orders for a particular store
+        /// </summary>
+        /// <param name="storeCode"></param>
+        /// <returns>Cost of orders or throws a custom <code>Exception</code> if an issue arises. </returns>
         public double GetTotalCostOfAllOrdersForAStore(string storeCode)
         {
             try
@@ -120,7 +125,14 @@ namespace SpurStoreBigData
                 throw new Exception("Unable to complete that task", e);
             }
         }
-        public double GetTotalCostOfAllOrdersInAWeek(int week)
+
+        /// <summary>
+        /// Get the total cost of all orders in a week and year. 
+        /// </summary>
+        /// <param name="week">Week number between 1 - 52</param>
+        /// <param name="year">Year number. E.G. 2014</param>
+        /// <returns>Cost of orders or throws a custom <code>Exception</code> if an issue arises. </returns>
+        public double GetTotalCostOfAllOrdersInAWeek(int week, int year)
         {
             try
             {
@@ -140,7 +152,15 @@ namespace SpurStoreBigData
                 throw new Exception("Unable to complete that task", e);
             }
         }
-        public double GetTotalCostOfAllOrdersInAWeekForAStore(int week, string storeCode)
+
+        /// <summary>
+        /// Get the total cost of all orders in a week and year for a store. 
+        /// </summary>
+        /// <param name="week">Week number between 1 - 52</param>
+        /// <param name="year">Year number. E.G. 2014</param>
+        /// <param name="storeCode"></param>
+        /// <returns>Cost of all orders or throws a custom <code>Exception</code> if an issue arises. </returns>
+        public double GetTotalCostOfAllOrdersInAWeekForAStore(int week, int year, string storeCode)
         {
             try
             {
@@ -148,7 +168,7 @@ namespace SpurStoreBigData
                 s.Start();
                 double result = 0.00;
 
-                foreach (Order o in orders.AsParallel().Where(o => o.Date.Week.Equals(week)).Where(o => o.Store.StoreCode.Equals(storeCode.ToUpper())).AsSequential()) result += o.Cost;
+                foreach (Order o in orders.AsParallel().Where(o => o.Date.Week.Equals(week)).Where(o => o.Date.Year.Equals(year)).Where(o => o.Store.StoreCode.Equals(storeCode.ToUpper())).AsSequential()) result += o.Cost;
 
                 s.Stop();
                 Console.WriteLine(s.Elapsed.TotalSeconds);
@@ -160,6 +180,12 @@ namespace SpurStoreBigData
                 throw new Exception("Unable to complete that task", e);
             }
         }
+
+        /// <summary>
+        /// Get the total cost of all orders for a supplier. 
+        /// </summary>
+        /// <param name="supplierName">The name of supplier. </param>
+        /// <returns>Cost of all orders or throws a custom <code>Exception</code> if an issue arises. </returns>
         public double GetTotalCostOfAllOrdersForASupplier(string supplierName)
         {
             try
@@ -182,8 +208,35 @@ namespace SpurStoreBigData
         }
 
         /// <summary>
+        /// Get the total cost of all orders for a supplier type. 
+        /// </summary>
+        /// <param name="supplierType">The typr of supplier. </param>
+        /// <returns> or throws a custom <code>Exception</code> if an issue arises. </returns>
+        public double GetTotalCostOfAllOrdersForASupplierType(string supplierType)
+        {
+            try
+            {
+                Stopwatch s = new Stopwatch();
+                s.Start();
+                double result = 0.00;
+
+                foreach (var o in orders.AsParallel().Where(o => o.Supplier.Type.ToLower().Equals(supplierType.ToLower()))) result += o.Cost;
+
+                s.Stop();
+                Console.WriteLine(s.Elapsed.TotalSeconds);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Unable to complete that task", e);
+            }
+        }
+
+        /// <summary>
         /// Reload data from files via <code>FolderPath</code> property. 
         /// </summary>
+        /// <param name="cts">Used to escape the loading process. </param>
         /// <returns>Custom <code>IOException</code> if issue found, else <code>null</code>. </returns>
         public IOException ReloadData(CancellationTokenSource cts) => LoadData(cts);
 
