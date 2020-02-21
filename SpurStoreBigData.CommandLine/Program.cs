@@ -14,7 +14,6 @@ namespace SpurStoreBigData.CommandLine
 {
     class Program
     {
-
         static CancellationTokenSource cts = new CancellationTokenSource();
 
         public static Core Core { get; set; } = Instance;
