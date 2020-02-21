@@ -214,21 +214,21 @@ namespace SpurStoreBigData.CommandLine
         {
             int result = -1;
 
-            while (result < 1)
+            while (!MenuItems.Keys.Contains(result))
             {
                 try
                 {
                     Console.Write("> ");
                     result = Convert.ToInt32(Console.ReadLine());
 
-                    if (result > MenuItems.Count)
+                    if (!MenuItems.Keys.Contains(result))
                     {
                         Console.WriteLine("Must be between 1 and {0}", MenuItems.Count);
                     }
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("Too big or small");
+                    Console.WriteLine("Must be a whole number");
 
                     result = -1;
                 }
