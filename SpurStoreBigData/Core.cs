@@ -10,29 +10,45 @@ using System.Threading.Tasks;
 
 namespace SpurStoreBigData
 {
+    /// <summary>
+    /// The 
+    /// </summary>
     public class Core
     {
+        /// <summary>
+        /// The only instance of the class <see cref="Core"/>
+        /// </summary>
         public static Core Instance { get; private set; } = new Core();
         private Core() { }
 
-        private ConcurrentDictionary<string, Store> stores = new ConcurrentDictionary<string, Store>();
-        private ConcurrentStack<Date> dates = new ConcurrentStack<Date>();
-        private ConcurrentBag<Order> orders = new ConcurrentBag<Order>();
-        private ConcurrentDictionary<string, Supplier> suppliers = new ConcurrentDictionary<string, Supplier>();
+        private ConcurrentDictionary<string, Store> Stores = new ConcurrentDictionary<string, Store>();
+        private ConcurrentStack<Date> Dates = new ConcurrentStack<Date>();
+        private ConcurrentBag<Order> Orders = new ConcurrentBag<Order>();
+        private ConcurrentDictionary<string, Supplier> Suppliers = new ConcurrentDictionary<string, Supplier>();
 
+        /// <summary>
+        /// 
+        /// </summary>
         public string FolderPath { get; set; }
+
+        /// <summary>
+        /// The filename that contains the store codes
+        /// </summary>
         public static string StoreCodesFile { get; private set; } = "StoreCodes.csv";
+        /// <summary>
+        /// The Folder name that contains all the store data
+        /// </summary>
         public static string StoreDataFolder { get; private set; } = "StoreData";
 
         /// <summary>
-        /// Get all stores from the available data. 
+        /// Get all stores from the available data
         /// </summary>
-        /// <returns>All stores as <code>Store[]</code> or throws a custom <code>Exception</code> if an issue arises. </returns>
+        /// <returns>All stores as <c><see cref="Store"/>[]</c> or throws <c>Exception</c> if an issue arises</returns>
         public Store[] GetStores()
         {
             try
             {
-                return stores.Values.OrderBy(s => s.StoreCode).ToArray();
+                return Stores.Values.OrderBy(s => s.StoreCode).ToArray();
             }
             catch (ArgumentNullException e)
             {
@@ -40,16 +56,16 @@ namespace SpurStoreBigData
             }
         }
         /// <summary>
-        /// Get all supplier names from the available data. 
+        /// Get all supplier names from the available data
         /// </summary>
-        /// <returns>All supplier names as <code>string[]</code> or throws a custom <code>Exception</code> if an issue arises. </returns>
+        /// <returns>All supplier names as <c>string[]</c> or throws <c>Exception</c> if an issue arises</returns>
         public string[] GetSupplierNames()
         {
             //string[] result = null;
 
             try
             {
-                return suppliers.Keys
+                return Suppliers.Keys
                     .OrderBy(s => s)
                     .ToArray();
 
@@ -66,14 +82,14 @@ namespace SpurStoreBigData
             }
         }
         /// <summary>
-        /// Get all supplier types from the available data. 
+        /// Get all supplier types from the available data
         /// </summary>
-        /// <returns>All supplier types as <code>string[]</code> or throws a custom <code>Exception</code> if an issue arises. </returns>
+        /// <returns>All supplier types as <c>string[]</c> or throws <c>Exception</c> if an issue arises</returns>
         public string[] GetSupplierTypes()
         {
             try
             {
-                return suppliers.Values.GroupBy(s => s.Type).Select(s => s.Key).OrderBy(s => s).ToArray();
+                return Suppliers.Values.GroupBy(s => s.Type).Select(s => s.Key).OrderBy(s => s).ToArray();
             }
             catch (Exception e)
             {
@@ -82,16 +98,18 @@ namespace SpurStoreBigData
         }
 
         /// <summary>
-        /// Get the total cost of all orders from the available data. 
+        /// Get the total cost of all orders from the available data
         /// </summary>
-        /// <returns>Cost of all orders or throws a custom <code>Exception</code> if an issue arises. </returns>
+        /// <returns>Cost of all orders or throws <c>Exception</c> if an issue arises</returns>
         public double GetTotalCostOfAllOrders()
         {
             try
             {
                 double result = 0.00;
 
-                foreach (Order o in orders) result += o.Cost;
+                foreach (Order o in Orders) result += o.Cost;
+
+                //Orders.AsParallel().ForAll(o => result += o.Cost);
 
                 return result;
             }
@@ -103,8 +121,8 @@ namespace SpurStoreBigData
         /// <summary>
         /// Get the total cost of all orders for a particular store
         /// </summary>
-        /// <param name="storeCode"></param>
-        /// <returns>Cost of orders or throws a custom <code>Exception</code> if an issue arises. </returns>
+        /// <param name="storeCode">Store code</param>
+        /// <returns>Cost of orders or throws <c>Exception</c> if an issue arises</returns>
         public double GetTotalCostOfAllOrdersForAStore(string storeCode)
         {
             try
@@ -113,7 +131,7 @@ namespace SpurStoreBigData
                 s.Start();
                 double result = 0.00;
 
-                foreach (Order o in orders.Where(o => o.Store.StoreCode.Equals(storeCode.ToUpper()))) result += o.Cost;
+                foreach (Order o in Orders.AsParallel().Where(o => o.Store.StoreCode == storeCode.ToUpper())) result += o.Cost;
 
                 s.Stop();
                 Console.WriteLine(s.Elapsed.TotalSeconds);
@@ -125,13 +143,12 @@ namespace SpurStoreBigData
                 throw new Exception("Unable to complete that task", e);
             }
         }
-
         /// <summary>
-        /// Get the total cost of all orders in a week and year. 
+        /// Get the total cost of all orders in a week and year
         /// </summary>
         /// <param name="week">Week number between 1 - 52</param>
-        /// <param name="year">Year number. E.G. 2014</param>
-        /// <returns>Cost of orders or throws a custom <code>Exception</code> if an issue arises. </returns>
+        /// <param name="year">Year number E.G. 2014</param>
+        /// <returns>Cost of orders or throws <c>Exception</c> if an issue arises</returns>
         public double GetTotalCostOfAllOrdersInAWeek(int week, int year)
         {
             try
@@ -140,7 +157,7 @@ namespace SpurStoreBigData
                 s.Start();
                 double result = 0.00;
 
-                foreach (Order o in orders.Where(o => o.Date.Week.Equals(week))) result += o.Cost;
+                foreach (Order o in Orders.AsParallel().Where(o => o.Date.Week.Equals(week)).Where(o=>o.Date.Year.Equals(year)).AsSequential()) result += o.Cost;
 
                 s.Stop();
                 Console.WriteLine(s.Elapsed.TotalSeconds);
@@ -152,14 +169,13 @@ namespace SpurStoreBigData
                 throw new Exception("Unable to complete that task", e);
             }
         }
-
         /// <summary>
-        /// Get the total cost of all orders in a week and year for a store. 
+        /// Get the total cost of all orders in a week and year for a store
         /// </summary>
         /// <param name="week">Week number between 1 - 52</param>
-        /// <param name="year">Year number. E.G. 2014</param>
-        /// <param name="storeCode"></param>
-        /// <returns>Cost of all orders or throws a custom <code>Exception</code> if an issue arises. </returns>
+        /// <param name="year">Year number E.G. 2014</param>
+        /// <param name="storeCode">Store code</param>
+        /// <returns>Cost of all orders or throws <c>Exception</c> if an issue arises</returns>
         public double GetTotalCostOfAllOrdersInAWeekForAStore(int week, int year, string storeCode)
         {
             try
@@ -168,7 +184,7 @@ namespace SpurStoreBigData
                 s.Start();
                 double result = 0.00;
 
-                foreach (Order o in orders.AsParallel().Where(o => o.Date.Week.Equals(week)).Where(o => o.Date.Year.Equals(year)).Where(o => o.Store.StoreCode.Equals(storeCode.ToUpper())).AsSequential()) result += o.Cost;
+                foreach (Order o in Orders.AsParallel().Where(o => o.Date.Week.Equals(week)).Where(o => o.Date.Year.Equals(year)).Where(o => o.Store.StoreCode.Equals(storeCode.ToUpper())).AsSequential()) result += o.Cost;
 
                 s.Stop();
                 Console.WriteLine(s.Elapsed.TotalSeconds);
@@ -180,12 +196,11 @@ namespace SpurStoreBigData
                 throw new Exception("Unable to complete that task", e);
             }
         }
-
         /// <summary>
-        /// Get the total cost of all orders for a supplier. 
+        /// Get the total cost of all orders for a supplier
         /// </summary>
-        /// <param name="supplierName">The name of supplier. </param>
-        /// <returns>Cost of all orders or throws a custom <code>Exception</code> if an issue arises. </returns>
+        /// <param name="supplierName">The name of supplier</param>
+        /// <returns>Cost of all orders or throws <c>Exception</c> if an issue arises</returns>
         public double GetTotalCostOfAllOrdersForASupplier(string supplierName)
         {
             try
@@ -194,7 +209,7 @@ namespace SpurStoreBigData
                 s.Start();
                 double result = 0.00;
 
-                foreach (var o in orders.AsParallel().Where(o => o.Supplier.Name.ToLower().Equals(supplierName.ToLower()))) result += o.Cost;
+                foreach (var o in Orders.AsParallel().Where(o => o.Supplier.Name.ToLower().Equals(supplierName.ToLower()))) result += o.Cost;
 
                 s.Stop();
                 Console.WriteLine(s.Elapsed.TotalSeconds);
@@ -206,12 +221,11 @@ namespace SpurStoreBigData
                 throw new Exception("Unable to complete that task", e);
             }
         }
-
         /// <summary>
-        /// Get the total cost of all orders for a supplier type. 
+        /// Get the total cost of all orders for a supplier type
         /// </summary>
-        /// <param name="supplierType">The typr of supplier. </param>
-        /// <returns> or throws a custom <code>Exception</code> if an issue arises. </returns>
+        /// <param name="supplierType">The type of supplier</param>
+        /// <returns>Cost of all orders or throws <c>Exception</c></c> if an issue arises</returns>
         public double GetTotalCostOfAllOrdersForASupplierType(string supplierType)
         {
             try
@@ -220,7 +234,34 @@ namespace SpurStoreBigData
                 s.Start();
                 double result = 0.00;
 
-                foreach (var o in orders.AsParallel().Where(o => o.Supplier.Type.ToLower().Equals(supplierType.ToLower()))) result += o.Cost;
+                foreach (var o in Orders.AsParallel().Where(o => o.Supplier.Type.ToLower().Equals(supplierType.ToLower()))) result += o.Cost;
+
+                s.Stop();
+                Console.WriteLine(s.Elapsed.TotalSeconds);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Unable to complete that task", e);
+            }
+        }
+        /// <summary>
+        /// Get the total cost of all orders for a supplier type in a week and year
+        /// </summary>
+        /// <param name="supplierType">The type of supplier</param>
+        /// <param name="week">Week number between 1 - 52</param>
+        /// <param name="year">Year number E.G. 2014</param>
+        /// <returns>Cost of all orders or throws <c>Exception</c> if an issue arises</returns>
+        public double GetTotalCostOfAllOrdersForASupplierTypeInAWeek(string supplierType, int week, int year)
+        {
+            try
+            {
+                Stopwatch s = new Stopwatch();
+                s.Start();
+                double result = 0.00;
+
+                foreach (var o in Orders.AsParallel().Where(o=>o.Date.Week == week).Where(o=>o.Date.Year == year).Where(o => o.Supplier.Type.ToLower() == supplierType.ToLower())) result += o.Cost;
 
                 s.Stop();
                 Console.WriteLine(s.Elapsed.TotalSeconds);
@@ -234,13 +275,13 @@ namespace SpurStoreBigData
         }
 
         /// <summary>
-        /// Reload data from files via <code>FolderPath</code> property. 
+        /// Reload data from files via <c><see cref="FolderPath"/></c> property
         /// </summary>
-        /// <param name="cts">Used to escape the loading process. </param>
-        /// <returns>Custom <code>IOException</code> if issue found, else <code>null</code>. </returns>
-        public IOException ReloadData(CancellationTokenSource cts) => LoadData(cts);
+        /// <param name="cts">Used to escape the loading process</param>
+        /// <returns>Custom <c>IOException</c> if issue found, else <c>null</c></returns>
+        public IOException ReloadData(CancellationTokenSource cts) => LoadData(cts).Result;
 
-        private IOException LoadData(CancellationTokenSource cts)
+        private Task<IOException> LoadData(CancellationTokenSource cts)
         {
             IOException e = null;
 
@@ -248,10 +289,10 @@ namespace SpurStoreBigData
             {
                 try
                 {
-                    stores = new ConcurrentDictionary<string, Store>();
-                    dates = new ConcurrentStack<Date>();
-                    orders = new ConcurrentBag<Order>();
-                    suppliers = new ConcurrentDictionary<string, Supplier>();
+                    Stores = new ConcurrentDictionary<string, Store>();
+                    Dates = new ConcurrentStack<Date>();
+                    Orders = new ConcurrentBag<Order>();
+                    Suppliers = new ConcurrentDictionary<string, Supplier>();
 
                     string storeCodesFilePath = FolderPath + @"\" + StoreCodesFile;
 
@@ -273,90 +314,95 @@ namespace SpurStoreBigData
                     {
                         string[] storeDataSplit = storeData.Split(',');
 
-                        if (!stores.ContainsKey(storeDataSplit[0]))
-                            stores.TryAdd(storeDataSplit[0], new Store(storeDataSplit[0], storeDataSplit[1]));
+                        if (!Stores.ContainsKey(storeDataSplit[0]))
+                            Stores.TryAdd(storeDataSplit[0], new Store(storeDataSplit[0], storeDataSplit[1]));
                     }
 
-                    string[] fileNames = Directory.GetFiles(FolderPath + @"\" + StoreDataFolder);
-                    //foreach (var filePath in fileNames)
-                    //fileNames.AsParallel().ForAll(filePath =>
-                    Parallel.ForEach(fileNames,new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount/2 } , filePath =>
+                    var t1 = Task<IOException>.Factory.StartNew(() =>
                     {
-                        string fileNameExt = Path.GetFileName(filePath);
-                        string fileName = Path.GetFileNameWithoutExtension(filePath);
-
-                        string[] fileNameSplit = fileName.Split('_');
-                        Store store = stores[fileNameSplit[0]];
-                        Date date = new Date(Convert.ToInt32(fileNameSplit[1]), Convert.ToInt32(fileNameSplit[2]));
-                        dates.Push(date);
-
-                        string[] orderData = File.ReadAllLines(FolderPath + @"\" + StoreDataFolder + @"\" + fileNameExt);
-                        //orderData.AsParallel().ForAll(orderInfo =>
-                        foreach (var orderInfo in orderData)
+                        try
                         {
-                            string[] orderSplit = orderInfo.Split(',');
+                            string[] fileNames = Directory.GetFiles(FolderPath + @"\" + StoreDataFolder);
+                            //foreach (var filePath in fileNames)
+                            //fileNames.AsParallel().ForAll(filePath =>
+                            Parallel.ForEach(fileNames,/*new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount/2 } ,*/ filePath =>
+                            {
+                                string fileNameExt = Path.GetFileName(filePath);
+                                string fileName = Path.GetFileNameWithoutExtension(filePath);
 
-                            Supplier supplier = suppliers.GetOrAdd(orderSplit[0], new Supplier(orderSplit[0], orderSplit[1]));
-                            Order o = new Order(store, date, supplier, Convert.ToDouble(orderSplit[2]));
-                            orders.Add(o);
-                        }//);
+                                string[] fileNameSplit = fileName.Split('_');
+                                Store store = Stores[fileNameSplit[0]];
+                                Date date = new Date(Convert.ToInt32(fileNameSplit[1]), Convert.ToInt32(fileNameSplit[2]));
+                                Dates.Push(date);
+
+                                string[] orderData = File.ReadAllLines(FolderPath + @"\" + StoreDataFolder + @"\" + fileNameExt);
+                                //orderData.AsParallel().ForAll(orderInfo =>
+                                //Parallel.ForEach(orderData, orderInfo =>
+                                foreach (var orderInfo in orderData)
+                                {
+                                    string[] orderSplit = orderInfo.Split(',');
+
+                                    Supplier supplier = Suppliers.GetOrAdd(orderSplit[0], new Supplier(orderSplit[0], orderSplit[1]));
+                                    Order o = new Order(store, date, supplier, Convert.ToDouble(orderSplit[2]));
+                                    Orders.Add(o);
+                                }//);
+                            });
+                            return null;
+                        }
+                        catch (Exception ex)
+                        {
+                            return GetFriendlyIOException(ex);
+                        }
                     });
+                    t1.Wait();
+                    e = t1.Result;
 
-                    //foreach(var filePath in fileNames)
-                    //Parallel.ForEach(fileNames, filePath =>
-                    //{
-                    //    string fileNameExt = Path.GetFileName(filePath);
-                    //    string fileName = Path.GetFileNameWithoutExtension(filePath);
-
-                    //    string[] fileNameSplit = fileName.Split('_');
-                    //    Store store = stores[fileNameSplit[0]];
-                    //    Date date = new Date(Convert.ToInt32(fileNameSplit[1]), Convert.ToInt32(fileNameSplit[2]));
-                    //    dates.Push(date);
-
-                    //    string[] orderData = File.ReadAllLines(FolderPath + @"\" + StoreDataFolder + @"\" + fileNameExt);
-                    //    foreach (var orderInfo in orderData)
-                    //    {
-                    //        string[] orderSplit = orderInfo.Split(',');
-                    //        Order order = new Order(store, date, orderSplit[0], orderSplit[1], Convert.ToDouble(orderSplit[2]));
-                    //        orders.Add(order);
-
-                    //        Supplier s = new Supplier(order.SupplierName, order.SupplierType);
-                    //        if (!suppliers.Contains(s)) // O(n^2)
-                    //        {
-                    //            suppliers.Append(s);
-                    //        }
-                    //    }
-                    //});
                     stopWatch.Stop();
-                    Console.WriteLine("TimeToLoad: " + stopWatch.Elapsed.TotalSeconds); // For testing purposes. 
-                }
-                catch (DirectoryNotFoundException ex)
-                {
-                    e = new IOException("Unable to locate directory '" + FolderPath + "'", ex);
-                }
-                catch (FileNotFoundException ex)
-                {
-                    e = new IOException("Unable to locate StoreCodes.csv at '" + FolderPath + "'", ex);
-                }
-                catch (PathTooLongException ex)
-                {
-                    e = new IOException("File path '" + FolderPath + "' is too long", ex);
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    e = new IOException("Unable to access the directory and/or files", ex);
-                }
-                catch (NotSupportedException ex)
-                {
-                    e = new IOException("The path '" + FolderPath + "' is not supported", ex);
+                    Console.WriteLine("TimeToLoad: " + stopWatch.Elapsed.TotalSeconds); // For testing purposes
                 }
                 catch (Exception ex)
                 {
-                    e = new IOException("Error loading store data", ex);
+                    e = GetFriendlyIOException(ex);
                 }
 
                 return e;
-            }, cts.Token).Result;
+            }, cts.Token);
+        }
+
+        private IOException GetFriendlyIOException(Exception e)
+        {
+            IOException result;
+
+            try
+            {
+                throw e;
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                result = new IOException("Unable to locate directory '" + FolderPath + "'", ex);
+            }
+            catch (FileNotFoundException ex)
+            {
+                result = new IOException("Unable to locate StoreCodes.csv at '" + FolderPath + "'", ex);
+            }
+            catch (PathTooLongException ex)
+            {
+                result = new IOException("File path '" + FolderPath + "' is too long", ex);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                result = new IOException("Unable to access the directory and/or files", ex);
+            }
+            catch (NotSupportedException ex)
+            {
+                result = new IOException("The path '" + FolderPath + "' is not supported", ex);
+            }
+            catch (Exception ex)
+            {
+                result = new IOException("Error loading store data", ex);
+            }
+
+            return result;
         }
     }
 }

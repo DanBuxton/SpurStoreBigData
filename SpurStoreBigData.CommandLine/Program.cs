@@ -192,7 +192,9 @@ namespace SpurStoreBigData.CommandLine
 
             try
             {
-                Core.ReloadData(cts);
+                IOException e = Core.ReloadData(cts);
+
+                if (e != null) throw e;
 
                 result = true;
             }
