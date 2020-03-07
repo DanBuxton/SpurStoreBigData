@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using static SpurStoreBigData.Core;
+//using static SpurStoreBigData.Core;
 
 namespace SpurStoreBigData.CommandLine
 {
@@ -16,7 +16,7 @@ namespace SpurStoreBigData.CommandLine
     {
         static CancellationTokenSource cts = new CancellationTokenSource();
 
-        public static Core Core { get; set; } = Instance;
+        public static Core Core { get; set; } = Core.Instance;
 
         private static Dictionary<int, string> MenuItems { get; set; } = new Dictionary<int, string>();
 
@@ -96,7 +96,7 @@ namespace SpurStoreBigData.CommandLine
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e.Message);
+                        Console.WriteLine(e.InnerException.ToString());
                     }
                     break;
                 case 5: // Cost of all orders for a store
@@ -126,7 +126,7 @@ namespace SpurStoreBigData.CommandLine
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e.Message);
+                        Console.WriteLine(e.InnerException.Message);
                     }
                     break;
                 case 8: // Cost of all oders to a supplier
@@ -150,10 +150,34 @@ namespace SpurStoreBigData.CommandLine
                     }
                     break;
                 case 10: // Cost of all orders in a week from a supplier type
+                    try
+                    {
+                        Console.WriteLine("{0:C}", Core.GetTotalCostOfAllOrdersForASupplierTypeInAWeek("Groceries", 1, 2013));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                     break;
                 case 11: // Cost of all orders for a suplier type for a store
+                    try
+                    {
+                        Console.WriteLine("{0:C}", Core.GetTotalCostOfAllOrdersForASupplierForAStore("Blue Diamond", "DER1"));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                     break;
                 case 12: // Cost of all orders in a week for a supplier type for a store
+                    try
+                    {
+                        Console.WriteLine("{0:C}", Core.GetTotalCostOfAllOrdersInAWeekForASupplierForAStore(1, 2013, "Blue Diamond", "DER1"));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                     break;
                 case 13: // Change data path
                     ChangeDataFolder();
@@ -190,6 +214,9 @@ namespace SpurStoreBigData.CommandLine
 
             bool result = false;
 
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+
             try
             {
                 IOException e = Core.ReloadData(cts);
@@ -203,10 +230,13 @@ namespace SpurStoreBigData.CommandLine
                 HandleException(e);
             }
 
+            stopWatch.Stop();
+            Console.WriteLine("TimeToLoad: " + stopWatch.Elapsed.TotalSeconds); // For testing purposes
+
             return result;
         }
 
-        private static void HandleException(IOException e)
+        private static void HandleException(Exception e)
         {
             Console.WriteLine(e.Message);
         }
@@ -253,7 +283,7 @@ namespace SpurStoreBigData.CommandLine
 
         private static void SetupConsole()
         {
-            Console.Title = "Spur Ltd Big Data";
+            Console.Title = Core.Title;
 
             MenuItems.Add(1, "List all stores");
             MenuItems.Add(MenuItems.Keys.Last() + 1, "List all suppliers");

@@ -21,5 +21,16 @@ namespace SpurStoreBigData
         {
             return string.Format("{0, 2}/{1, -2}", Week, Year);
         }
+
+        public override bool Equals(object obj)
+        {
+            return obj is Date d ? Week == d.Week && Year == d.Year : false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Week * 27 +
+                Year * 27;
+        }
     }
 }
