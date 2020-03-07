@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpurStoreBigData", "SpurSto
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SpurStoreBigData.FSharp", "SpurStoreBigData.FSharp\SpurStoreBigData.FSharp.fsproj", "{0B1009F9-0840-4C06-8AFB-B25FDE293C4B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpurStoreBigData.GraphicalUserInterface", "SpurStoreBigData.GraphicalUserInterface\SpurStoreBigData.GraphicalUserInterface.csproj", "{7E6BE5C4-920D-4119-855F-C3B0AA78E7B6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpurStoreBigData.GraphicalUserInterface", "SpurStoreBigData.GraphicalUserInterface\SpurStoreBigData.GraphicalUserInterface.csproj", "{DD2B8F6C-6E43-4584-A5AC-D7C58F11832A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +29,10 @@ Global
 		{0B1009F9-0840-4C06-8AFB-B25FDE293C4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B1009F9-0840-4C06-8AFB-B25FDE293C4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0B1009F9-0840-4C06-8AFB-B25FDE293C4B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7E6BE5C4-920D-4119-855F-C3B0AA78E7B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7E6BE5C4-920D-4119-855F-C3B0AA78E7B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7E6BE5C4-920D-4119-855F-C3B0AA78E7B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7E6BE5C4-920D-4119-855F-C3B0AA78E7B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD2B8F6C-6E43-4584-A5AC-D7C58F11832A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD2B8F6C-6E43-4584-A5AC-D7C58F11832A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD2B8F6C-6E43-4584-A5AC-D7C58F11832A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD2B8F6C-6E43-4584-A5AC-D7C58F11832A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
