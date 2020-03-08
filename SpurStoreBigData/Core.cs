@@ -23,10 +23,26 @@ namespace SpurStoreBigData
 
         public static string Title { get; } = "Spur Store Ltd";
 
-        private ConcurrentDictionary<string, Store> Stores = new ConcurrentDictionary<string, Store>();
-        private ConcurrentBag<Date> Dates = new ConcurrentBag<Date>();
-        private ConcurrentBag<Order> Orders = new ConcurrentBag<Order>();
-        private ConcurrentDictionary<string, Supplier> Suppliers = new ConcurrentDictionary<string, Supplier>();
+        private ConcurrentDictionary<string, Store> stores = new ConcurrentDictionary<string, Store>();
+        private ConcurrentBag<Date> dates = new ConcurrentBag<Date>();
+        private ConcurrentBag<Order> orders = new ConcurrentBag<Order>();
+        private ConcurrentDictionary<string, Supplier> suppliers = new ConcurrentDictionary<string, Supplier>();
+
+        public List<Date> Dates
+        {
+            get
+            {
+                return dates.ToList();
+            }
+        }
+
+        public List<Order> Orders
+        {
+            get
+            {
+                return orders.ToList();
+            }
+        }
 
         /// <summary>
         /// 
@@ -50,9 +66,11 @@ namespace SpurStoreBigData
         {
             try
             {
-                return Stores.Values.OrderBy(s => s.StoreCode).ToArray();
+                return stores.Values
+                    .OrderBy(s => s.StoreCode)
+                    .ToArray();
             }
-            catch (ArgumentNullException e)
+            catch (Exception e)
             {
                 throw new Exception("Unable to complete that task", e);
             }
@@ -68,16 +86,9 @@ namespace SpurStoreBigData
 
             try
             {
-                return Suppliers.Keys
+                return suppliers.Keys
                     .OrderBy(s => s)
                     .ToArray();
-
-                //result = new string[suppliers.Count];
-                //for (int i = 0; i < result.Length; i++)
-                //{
-                //    var s = suppliers.Values.OrderBy(v => v.Name).ToArray();
-                //    result[i] = s[i].Name;
-                //}
             }
             catch (Exception e)
             {
@@ -93,7 +104,11 @@ namespace SpurStoreBigData
         {
             try
             {
-                return Suppliers.Values.GroupBy(s => s.Type).Select(s => s.Key).OrderBy(s => s).ToArray();
+                return suppliers.Values
+                    .GroupBy(s => s.Type)
+                    .Select(s => s.Key)
+                    .OrderBy(s => s)
+                    .ToArray();
             }
             catch (Exception e)
             {
@@ -112,20 +127,8 @@ namespace SpurStoreBigData
             {
                 double result = 0.00;
 
-                //foreach (Order o in Orders) result += o.Cost;
-
-                var source = Orders.AsParallel();
-
-                foreach (Order o in Orders)
-                    //Parallel.ForEach(source, o =>
-                //{
-                    //Monitor.Enter(result);
+                foreach (Order o in orders)
                     result += o.Cost;
-                    //Monitor.Exit(result);
-                    //Monitor.Pulse(result);
-                //});
-
-                //Orders.AsParallel().ForAll(o => result += o.Cost);
 
                 return result;
             }
@@ -144,14 +147,11 @@ namespace SpurStoreBigData
         {
             try
             {
-                Stopwatch s = new Stopwatch();
-                s.Start();
                 double result = 0.00;
 
-                foreach (Order o in Orders.AsParallel().Where(o => o.Store.StoreCode == storeCode.ToUpper())) result += o.Cost;
-
-                s.Stop();
-                Console.WriteLine(s.Elapsed.TotalSeconds);
+                foreach (Order o in orders.AsParallel()
+                    .Where(o => o.Store.StoreCode == storeCode.ToUpper()))
+                    result += o.Cost;
 
                 return result;
             }
@@ -171,14 +171,12 @@ namespace SpurStoreBigData
         {
             try
             {
-                Stopwatch s = new Stopwatch();
-                s.Start();
                 double result = 0.00;
 
-                foreach (Order o in Orders.AsParallel().Where(o => o.Date.Week.Equals(week)).Where(o => o.Date.Year.Equals(year)).AsSequential()) result += o.Cost;
-
-                s.Stop();
-                Console.WriteLine(s.Elapsed.TotalSeconds);
+                foreach (Order o in orders.AsParallel()
+                    .Where(o => o.Date.Week.Equals(week))
+                    .Where(o => o.Date.Year.Equals(year)))
+                    result += o.Cost;
 
                 return result;
             }
@@ -199,37 +197,13 @@ namespace SpurStoreBigData
         {
             try
             {
-                Stopwatch s = new Stopwatch();
-                s.Start();
                 double result = 0.00;
 
-                //var source = Orders.AsParallel()
-                //    .Where(o => o.Date.Week.Equals(week))
-                //    .Where(o => o.Store.StoreCode.Equals(storeCode.ToUpper()))
-                //    .Where(o => o.Date.Year.Equals(year));
-
-                foreach (Order o in Orders.AsParallel()
+                foreach (Order o in orders.AsParallel()
                     .Where(o => o.Date.Week.Equals(week))
                     .Where(o => o.Store.StoreCode.Equals(storeCode.ToUpper()))
                     .Where(o => o.Date.Year.Equals(year)))
-                {
                     result += o.Cost;
-                }
-                //result += o.Cost;
-                //Parallel.ForEach(source, o =>
-                //{
-                //    Monitor.TryEnter(result);
-
-                //    if (Monitor.IsEntered(result))
-                //    {
-                //        result += o.Cost;
-                //        Monitor.Exit(result);
-                //        Monitor.Pulse(result);
-                //    }
-                //});
-
-                s.Stop();
-                Console.WriteLine(s.Elapsed.TotalSeconds);
 
                 return result;
             }
@@ -249,14 +223,11 @@ namespace SpurStoreBigData
         {
             try
             {
-                Stopwatch s = new Stopwatch();
-                s.Start();
                 double result = 0.00;
 
-                foreach (var o in Orders.AsParallel().Where(o => o.Supplier.Name.ToLower().Equals(supplierName.ToLower()))) result += o.Cost;
-
-                s.Stop();
-                Console.WriteLine(s.Elapsed.TotalSeconds);
+                foreach (var o in orders.AsParallel()
+                    .Where(o => o.Supplier.Name.ToLower().Equals(supplierName.ToLower())))
+                    result += o.Cost;
 
                 return result;
             }
@@ -275,14 +246,12 @@ namespace SpurStoreBigData
         {
             try
             {
-                Stopwatch s = new Stopwatch();
-                s.Start();
                 double result = 0.00;
 
-                foreach (var o in Orders.AsParallel().Where(o => o.Supplier.Type.ToLower().Equals(supplierType.ToLower()))) result += o.Cost;
-
-                s.Stop();
-                Console.WriteLine(s.Elapsed.TotalSeconds);
+                foreach (var o in orders.AsParallel()
+                    .Where(o => o.Supplier.Type.ToLower()
+                    .Equals(supplierType.ToLower())))
+                    result += o.Cost;
 
                 return result;
             }
@@ -303,18 +272,13 @@ namespace SpurStoreBigData
         {
             try
             {
-                Stopwatch s = new Stopwatch();
-                s.Start();
                 double result = 0.00;
 
-                foreach (var o in Orders.AsParallel()
+                foreach (var o in orders.AsParallel()
                     .Where(o => o.Date.Week == week)
                     .Where(o => o.Date.Year == year)
                     .Where(o => o.Supplier.Type.ToLower() == supplierType.ToLower()))
                     result += o.Cost;
-
-                s.Stop();
-                Console.WriteLine(s.Elapsed.TotalSeconds);
 
                 return result;
             }
@@ -333,17 +297,12 @@ namespace SpurStoreBigData
         {
             try
             {
-                Stopwatch s = new Stopwatch();
-                s.Start();
                 double result = 0.00;
 
-                foreach (var o in Orders.AsParallel()
+                foreach (var o in orders.AsParallel()
                     .Where(o => o.Supplier.Name.ToLower() == supplierName.ToLower())
                     .Where(o => o.Store.StoreCode.ToLower() == storeCode.ToLower()))
                     result += o.Cost;
-
-                s.Stop();
-                Console.WriteLine(s.Elapsed.TotalSeconds);
 
                 return result;
             }
@@ -362,18 +321,13 @@ namespace SpurStoreBigData
         {
             try
             {
-                Stopwatch s = new Stopwatch();
-                s.Start();
                 double result = 0.00;
 
-                foreach (var o in Orders.AsParallel()
+                foreach (var o in orders.AsParallel()
                     .Where(o => o.Supplier.Name == supplierName)
                     .Where(o => o.Store.StoreCode == storeCode)
-                    .Where(o=>o.Date.Year == year).Where(o=>o.Date.Week == week))
+                    .Where(o => o.Date.Year == year).Where(o => o.Date.Week == week))
                     result += o.Cost;
-
-                s.Stop();
-                Console.WriteLine(s.Elapsed.TotalSeconds);
 
                 return result;
             }
@@ -474,10 +428,10 @@ namespace SpurStoreBigData
             {
                 try
                 {
-                    Stores = new ConcurrentDictionary<string, Store>();
-                    Dates = new ConcurrentBag<Date>();
-                    Orders = new ConcurrentBag<Order>();
-                    Suppliers = new ConcurrentDictionary<string, Supplier>();
+                    stores = new ConcurrentDictionary<string, Store>();
+                    dates = new ConcurrentBag<Date>();
+                    orders = new ConcurrentBag<Order>();
+                    suppliers = new ConcurrentDictionary<string, Supplier>();
 
                     string storeCodesFilePath = FolderPath + @"\" + StoreCodesFile;
 
@@ -497,8 +451,8 @@ namespace SpurStoreBigData
                     {
                         string[] storeDataSplit = storeData.Split(',');
 
-                        if (!Stores.ContainsKey(storeDataSplit[0]))
-                            Stores.TryAdd(storeDataSplit[0], new Store(storeDataSplit[0], storeDataSplit[1]));
+                        if (!stores.ContainsKey(storeDataSplit[0]))
+                            stores.TryAdd(storeDataSplit[0], new Store(storeDataSplit[0], storeDataSplit[1]));
                     }
 
                     try
@@ -513,10 +467,10 @@ namespace SpurStoreBigData
 
                             string[] fileNameSplit = fileName.Split('_');
                             Date date = new Date(Convert.ToInt32(fileNameSplit[1]), Convert.ToInt32(fileNameSplit[2]));
-                            if (!Dates.Contains(date))
-                                Dates.Add(date);
+                            if (!dates.Contains(date))
+                                dates.Add(date);
 
-                            Store store = Stores[fileNameSplit[0]];
+                            Store store = stores[fileNameSplit[0]];
                             string[] orderData = File.ReadAllLines(FolderPath + @"\" + StoreDataFolder + @"\" + fileNameExt);
                             //orderData.AsParallel().ForAll(orderInfo =>
                             //Parallel.ForEach(orderData, orderInfo =>
@@ -524,13 +478,13 @@ namespace SpurStoreBigData
                             {
                                 string[] orderSplit = orderInfo.Split(',');
 
-                                Supplier supplier = Suppliers.GetOrAdd(orderSplit[0], new Supplier(orderSplit[0], orderSplit[1]));
+                                Supplier supplier = suppliers.GetOrAdd(orderSplit[0], new Supplier(orderSplit[0], orderSplit[1]));
                                 Order o = new Order(store, date, supplier, Convert.ToDouble(orderSplit[2]));
-                                Orders.Add(o);
+                                orders.Add(o);
                             }//);
                         });
 
-                        Console.WriteLine("Dates: {0}", Dates.Count);
+                        Console.WriteLine("Dates: {0}", dates.Count);
 
                         return null;
                     }
